@@ -17,7 +17,7 @@ router.post('/login', async (req, res) => {
   // Szukaj kierowcy w bazie
   const { data: kierowca, error } = await supabase
     .from('kierowcy')
-    .select('id, nr_sluzbowy, imie, nazwisko, pin_hash, aktywny, zajezdnia_id, wersja')
+    .select('id, nr_sluzbowy, imie, nazwisko, pin_hash, aktywny, zajezdnia_id, wersja, firma')
     .eq('nr_sluzbowy', nr_sluzbowy)
     .single();
 
@@ -55,6 +55,7 @@ router.post('/login', async (req, res) => {
       imie:        kierowca.imie,
       nazwisko:    kierowca.nazwisko,
       wersja:      kierowca.wersja,
+      firma:       kierowca.firma,
     }
   });
 });
