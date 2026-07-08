@@ -15,7 +15,7 @@ router.get('/', authMW, async (req, res) => {
     .from('wyjazdy_turystyczne')
     .select(POLA)
     .eq('kierowca_id', kierowcaId)
-    .order('data', { ascending: false });
+    .order('data', { ascending: true });
 
   if (error) return res.status(500).json({ error: error.message });
   res.json(data);
