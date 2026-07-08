@@ -11,7 +11,7 @@ const szkoleniaRoutes = require('./routes/szkolenia');
 const app = express();
 
 app.use(cors({
-  origin: ['https://appkierowcagdynia.netlify.app', 'http://localhost:5174', 'http://localhost:5173'],
+  origin: ['https://appkierowca.netlify.app', 'https://appkierowcagdynia.netlify.app', 'http://localhost:5174', 'http://localhost:5173'],
   credentials: true
 }));
 app.use(express.json());
