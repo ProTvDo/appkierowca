@@ -8,6 +8,7 @@ const usterkiRoutes = require('./routes/usterki');
 const kontaktyRoutes = require('./routes/kontakty');
 const szkoleniaRoutes = require('./routes/szkolenia');
 const wyjazdyRoutes = require('./routes/wyjazdy');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use('/api/usterki',  usterkiRoutes);
 app.use('/api/kontakty', kontaktyRoutes);
 app.use('/api/szkolenia', szkoleniaRoutes);
 app.use('/api/wyjazdy', wyjazdyRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ── health check ──
 app.get('/api/ping', (req, res) => res.json({ ok: true, czas: new Date() }));
