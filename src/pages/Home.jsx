@@ -35,6 +35,7 @@ export default function Home({ kierowca, token, onLogout, goTo }) {
           <div>
             <div className="hero-greeting">Dzień dobry,</div>
             <div className="hero-name">{kierowca.imie} {kierowca.nazwisko}</div>
+            {kierowca.firma && <div className="hero-firma">{kierowca.firma}</div>}
           </div>
           <button className="hero-logout" onClick={onLogout}>Wyloguj ↩</button>
         </div>
