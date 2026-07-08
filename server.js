@@ -7,6 +7,7 @@ const grafikRoutes  = require('./routes/grafik');
 const usterkiRoutes = require('./routes/usterki');
 const kontaktyRoutes = require('./routes/kontakty');
 const szkoleniaRoutes = require('./routes/szkolenia');
+const wyjazdyRoutes = require('./routes/wyjazdy');
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use('/api/grafik',   grafikRoutes);
 app.use('/api/usterki',  usterkiRoutes);
 app.use('/api/kontakty', kontaktyRoutes);
 app.use('/api/szkolenia', szkoleniaRoutes);
+app.use('/api/wyjazdy', wyjazdyRoutes);
 
 // ── health check ──
 app.get('/api/ping', (req, res) => res.json({ ok: true, czas: new Date() }));
