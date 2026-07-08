@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import Grafik from './pages/Grafik'
+import Wyjazdy from './pages/Wyjazdy'
 import Usterki from './pages/Usterki'
 import Historia from './pages/Historia'
 import Telefony from './pages/Telefony'
+import Szkolenia from './pages/Szkolenia'
+import SzkolenieDetal from './pages/SzkolenieDetal'
+import Test from './pages/Test'
 import BottomNav from './components/BottomNav'
 import './App.css'
 
@@ -12,6 +16,8 @@ export default function App() {
   const [token, setToken]       = useState(localStorage.getItem('token'))
   const [kierowca, setKierowca] = useState(JSON.parse(localStorage.getItem('kierowca') || 'null'))
   const [strona, setStrona]     = useState('home')
+  const [wybranyMaterialId, setWybranyMaterialId] = useState(null)
+  const [wybranyTestId, setWybranyTestId]         = useState(null)
 
   // blokada desktop — tylko telefon
   const [czyMobil] = useState(() => {
@@ -57,10 +63,15 @@ export default function App() {
     <div className="app">
       <div className="screen-wrap">
         {strona === 'home'     && <Home kierowca={kierowca} token={token} onLogout={logout} goTo={setStrona} />}
-        {strona === 'grafik'   && <Grafik token={token} goTo={setStrona} />}
+        {strona === 'grafik'   && (kierowca.wersja === 'turystyka'
+          ? <Wyjazdy goTo={setStrona} />
+          : <Grafik token={token} goTo={setStrona} />)}
         {strona === 'usterki'  && <Usterki token={token} kierowca={kierowca} goTo={setStrona} />}
         {strona === 'historia' && <Historia token={token} goTo={setStrona} />}
         {strona === 'telefony' && <Telefony token={token} goTo={setStrona} />}
+        {strona === 'szkolenia' && <Szkolenia goTo={setStrona} setWybranyMaterialId={setWybranyMaterialId} />}
+        {strona === 'szkolenie-detal' && <SzkolenieDetal materialId={wybranyMaterialId} goTo={setStrona} setWybranyTestId={setWybranyTestId} />}
+        {strona === 'test' && <Test testId={wybranyTestId} goTo={setStrona} />}
       </div>
       <BottomNav aktywna={strona} goTo={setStrona} />
     </div>

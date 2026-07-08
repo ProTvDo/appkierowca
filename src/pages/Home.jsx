@@ -2,21 +2,31 @@ import { useState, useEffect } from 'react'
 import api from '../api'
 
 export default function Home({ kierowca, token, onLogout, goTo }) {
+  const czyTurystyka = kierowca.wersja === 'turystyka'
   const [dzisiaj, setDzisiaj] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    api.get('/grafik/dzisiaj')
+    const endpoint = czyTurystyka ? '/wyjazdy/najblizszy' : '/grafik/dzisiaj'
+    api.get(endpoint)
       .then(r => setDzisiaj(r.data))
       .catch(() => setDzisiaj(null))
       .finally(() => setLoading(false))
-  }, [])
+  }, [czyTurystyka])
 
+  // wersja miejska
   const linia  = dzisiaj ? `${dzisiaj.linia}/${dzisiaj.brygada}` : '—'
   const pojazd = dzisiaj?.pojazdy?.nr_boczny || '—'
   const zmiana = dzisiaj
     ? `Zmiana ${dzisiaj.zmiana} · ${dzisiaj.godz_start?.slice(0,5)}–${dzisiaj.godz_koniec?.slice(0,5)}`
     : 'Brak zmiany / wolne'
+
+  // wersja turystyka
+  const celPodrozy = dzisiaj?.cel_podrozy || '—'
+  const nrRejestracyjny = dzisiaj?.nr_rejestracyjny || '—'
+  const wyjazd = dzisiaj
+    ? `Wyjazd ${dzisiaj.godz_wyjazdu?.slice(0,5) || '—'} · podstawienie ${dzisiaj.godz_podstawienia?.slice(0,5) || '—'}`
+    : 'Brak zaplanowanego wyjazdu'
 
   return (
     <div>
@@ -37,34 +47,36 @@ export default function Home({ kierowca, token, onLogout, goTo }) {
           </div>
           <div className="hero-divider" />
           <div className="hero-stat">
-            <div className="hero-stat-label">Linia / Brygada</div>
-            <div className="hero-stat-value">{loading ? '...' : linia}</div>
-            <div className="hero-stat-sub">dziś</div>
+            <div className="hero-stat-label">{czyTurystyka ? 'Cel podróży' : 'Linia / Brygada'}</div>
+            <div className="hero-stat-value">{loading ? '...' : (czyTurystyka ? celPodrozy : linia)}</div>
+            <div className="hero-stat-sub">{czyTurystyka ? 'najbliższy wyjazd' : 'dziś'}</div>
           </div>
           <div className="hero-divider" />
           <div className="hero-stat">
-            <div className="hero-stat-label">Nr boczny</div>
-            <div className="hero-stat-value">{loading ? '...' : pojazd}</div>
+            <div className="hero-stat-label">{czyTurystyka ? 'Nr rejestracyjny' : 'Nr boczny'}</div>
+            <div className="hero-stat-value">{loading ? '...' : (czyTurystyka ? nrRejestracyjny : pojazd)}</div>
             <div className="hero-stat-sub">pojazd</div>
           </div>
         </div>
 
         <div className="hero-shift-row">
-          <div className="shift-pill">{loading ? '...' : zmiana}</div>
+          <div className="shift-pill">{loading ? '...' : (czyTurystyka ? wyjazd : zmiana)}</div>
         </div>
       </div>
 
       <div className="grid">
         <div className="tile" onClick={() => goTo('grafik')}>
-          <div className="tile-icon">📅</div>
-          <div className="tile-label">Grafik pracy</div>
-          <div className="tile-sub">Twój harmonogram</div>
+          <div className="tile-icon">{czyTurystyka ? '🧳' : '📅'}</div>
+          <div className="tile-label">{czyTurystyka ? 'Moje wyjazdy' : 'Grafik pracy'}</div>
+          <div className="tile-sub">{czyTurystyka ? 'Wyjazdy z grupą' : 'Twój harmonogram'}</div>
         </div>
-        <div className="tile" onClick={() => goTo('rozklady')}>
-          <div className="tile-icon">🗺️</div>
-          <div className="tile-label">Rozkłady jazdy</div>
-          <div className="tile-sub">Linie i przystanki</div>
-        </div>
+        {!czyTurystyka && (
+          <div className="tile" onClick={() => goTo('rozklady')}>
+            <div className="tile-icon">🗺️</div>
+            <div className="tile-label">Rozkłady jazdy</div>
+            <div className="tile-sub">Linie i przystanki</div>
+          </div>
+        )}
         <div className="tile" onClick={() => goTo('usterki')}>
           <div className="tile-icon">🔧</div>
           <div className="tile-label">Zgłoś usterkę</div>
@@ -74,6 +86,11 @@ export default function Home({ kierowca, token, onLogout, goTo }) {
           <div className="tile-icon">📞</div>
           <div className="tile-label">Telefony</div>
           <div className="tile-sub">Kontakty</div>
+        </div>
+        <div className="tile" onClick={() => goTo('szkolenia')}>
+          <div className="tile-icon">🎓</div>
+          <div className="tile-label">Szkolenia</div>
+          <div className="tile-sub">Baza wiedzy i testy</div>
         </div>
         <div className="tile wide" onClick={() => goTo('historia')}>
           <div className="tile-icon">📋</div>
