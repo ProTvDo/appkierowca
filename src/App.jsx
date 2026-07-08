@@ -9,6 +9,7 @@ import Telefony from './pages/Telefony'
 import Szkolenia from './pages/Szkolenia'
 import SzkolenieDetal from './pages/SzkolenieDetal'
 import Test from './pages/Test'
+import AdminPanel from './pages/AdminPanel'
 import BottomNav from './components/BottomNav'
 import './App.css'
 
@@ -62,6 +63,16 @@ export default function App() {
 
   if (!token) {
     return <Login onLogin={login} />
+  }
+
+  if (kierowca.rola === 'admin') {
+    return (
+      <div className="app">
+        <div className="screen-wrap">
+          <AdminPanel kierowca={kierowca} onLogout={logout} />
+        </div>
+      </div>
+    )
   }
 
   return (
