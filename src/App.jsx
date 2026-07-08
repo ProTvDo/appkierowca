@@ -12,6 +12,10 @@ import Test from './pages/Test'
 import BottomNav from './components/BottomNav'
 import './App.css'
 
+// Tymczasowo na czas testów: pozwól otwierać apkę też na desktopie.
+// Żeby wrócić do blokady tylko-mobile, ustaw z powrotem na false.
+const ZEZWOL_NA_DESKTOP_NA_CZAS_TESTOW = true
+
 export default function App() {
   const [token, setToken]       = useState(localStorage.getItem('token'))
   const [kierowca, setKierowca] = useState(JSON.parse(localStorage.getItem('kierowca') || 'null'))
@@ -19,8 +23,9 @@ export default function App() {
   const [wybranyMaterialId, setWybranyMaterialId] = useState(null)
   const [wybranyTestId, setWybranyTestId]         = useState(null)
 
-  // blokada desktop — tylko telefon
+  // blokada desktop — tylko telefon (wyłączona tymczasowo na czas testów, patrz flaga wyżej)
   const [czyMobil] = useState(() => {
+    if (ZEZWOL_NA_DESKTOP_NA_CZAS_TESTOW) return true
     const w = window.innerWidth
     const ua = navigator.userAgent
     return w <= 900 || /Android|iPhone|iPad/i.test(ua)
