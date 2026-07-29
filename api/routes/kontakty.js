@@ -8,7 +8,8 @@ const router = express.Router();
 router.get('/', authMW, async (req, res) => {
   try {
     const { rows } = await db.query(
-      'SELECT * FROM kontakty WHERE aktywny = true ORDER BY kolejnosc'
+      'SELECT * FROM kontakty WHERE aktywny = true AND firma_id = $1 ORDER BY kolejnosc',
+      [req.kierowca.firma_id]
     );
     res.json(rows);
   } catch (e) {

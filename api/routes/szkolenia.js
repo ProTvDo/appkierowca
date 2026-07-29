@@ -10,11 +10,14 @@ router.get('/', authMW, async (req, res) => {
   const kierowcaId = req.kierowca.id;
 
   try {
+    // Baza wiedzy jest wspólna (firma_id NULL), ale firma może dołożyć własne
+    // materiały — widoczne tylko dla jej kierowców.
     const { rows: materialy } = await db.query(
       `SELECT id, tytul, typ, opis_skrocony, kolejnosc
        FROM materialy_szkoleniowe
-       WHERE aktywny = true
-       ORDER BY kolejnosc`
+       WHERE aktywny = true AND (firma_id IS NULL OR firma_id = $1)
+       ORDER BY kolejnosc`,
+      [req.kierowca.firma_id]
     );
 
     const { rows: postepy } = await db.query(
@@ -23,7 +26,8 @@ router.get('/', authMW, async (req, res) => {
     );
 
     const { rows: testy } = await db.query(
-      'SELECT id, material_id FROM testy WHERE aktywny = true'
+      'SELECT id, material_id FROM testy WHERE aktywny = true AND (firma_id IS NULL OR firma_id = $1)',
+      [req.kierowca.firma_id]
     );
 
     const ukonczoneIds = new Set(postepy.map(p => p.material_id));
@@ -47,17 +51,22 @@ router.get('/:id', authMW, async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Identyfikator materiału przychodzi z adresu, więc sam filtr po id nie
+    // wystarczy — bez warunku na firmę dałoby się odczytać materiał własny
+    // innej firmy, zgadując numer.
     const { rows: materialRows } = await db.query(
       `SELECT id, tytul, typ, tresc, wideo_url, opis_skrocony
-       FROM materialy_szkoleniowe WHERE id = $1`,
-      [id]
+       FROM materialy_szkoleniowe
+       WHERE id = $1 AND (firma_id IS NULL OR firma_id = $2)`,
+      [id, req.kierowca.firma_id]
     );
     const material = materialRows[0];
     if (!material) return res.status(404).json({ error: 'Materiał nie znaleziony' });
 
     const { rows: testRows } = await db.query(
-      `SELECT id, tytul FROM testy WHERE material_id = $1 AND aktywny = true`,
-      [id]
+      `SELECT id, tytul FROM testy
+        WHERE material_id = $1 AND aktywny = true AND (firma_id IS NULL OR firma_id = $2)`,
+      [id, req.kierowca.firma_id]
     );
     const testRow = testRows[0];
 

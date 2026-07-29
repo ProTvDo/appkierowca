@@ -17,8 +17,9 @@ router.get('/kierowcy', authMW, wymagajAdmina, async (req, res) => {
   try {
     const { rows } = await db.query(
       `SELECT id, imie, nazwisko, nr_sluzbowy FROM kierowcy
-       WHERE aktywny = true AND rola = 'kierowca'
-       ORDER BY nazwisko`
+       WHERE aktywny = true AND rola = 'kierowca' AND firma_id = $1
+       ORDER BY nazwisko`,
+      [req.kierowca.firma_id]
     );
     res.json(rows);
   } catch (e) {
@@ -30,7 +31,9 @@ router.get('/kierowcy', authMW, wymagajAdmina, async (req, res) => {
 router.get('/pojazdy', authMW, wymagajAdmina, async (req, res) => {
   try {
     const { rows } = await db.query(
-      `SELECT id, nr_boczny, nr_rejestracyjny, marka, model FROM pojazdy ORDER BY id`
+      `SELECT id, nr_boczny, nr_rejestracyjny, marka, model FROM pojazdy
+       WHERE firma_id = $1 ORDER BY id`,
+      [req.kierowca.firma_id]
     );
     res.json(rows);
   } catch (e) {
@@ -52,12 +55,21 @@ router.post('/wyjazdy', authMW, wymagajAdmina, async (req, res) => {
   }
 
   try {
+    // Identyfikatory przychodzą z żądania, więc muszą zostać sprawdzone pod
+    // kątem firmy — inaczej admin jednej firmy mógłby przypisać wyjazd
+    // kierowcy albo pojazdowi innej.
     const { rows: pojazdRows } = await db.query(
-      `SELECT nr_rejestracyjny, marka, model FROM pojazdy WHERE id = $1`,
-      [pojazd_id]
+      `SELECT nr_rejestracyjny, marka, model FROM pojazdy WHERE id = $1 AND firma_id = $2`,
+      [pojazd_id, req.kierowca.firma_id]
     );
     const pojazd = pojazdRows[0];
     if (!pojazd) return res.status(400).json({ error: 'Nie znaleziono pojazdu' });
+
+    const { rows: kierowcaRows } = await db.query(
+      `SELECT id FROM kierowcy WHERE id = $1 AND firma_id = $2`,
+      [kierowca_id, req.kierowca.firma_id]
+    );
+    if (!kierowcaRows[0]) return res.status(400).json({ error: 'Nie znaleziono kierowcy' });
 
     const { rows } = await db.query(
       `INSERT INTO wyjazdy_turystyczne

@@ -6,23 +6,23 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=appkierowca
-Group=appkierowca
-WorkingDirectory=/var/www/appkierowca/api
-EnvironmentFile=/var/www/appkierowca/api/.env
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/var/www/kierowca-api
 ExecStart=/usr/bin/node server.js
 Restart=always
 RestartSec=5
 
-# Backend nasłuchuje tylko lokalnie — na świat wystawia go nginx
+# Konfiguracja idzie z .env w WorkingDirectory — czyta ją dotenv w server.js,
+# dlatego nie ma tu EnvironmentFile (systemd parsuje ten format inaczej).
 Environment=NODE_ENV=production
 
-# Ograniczenia — usługa nie potrzebuje niczego poza swoim katalogiem
+# Backend nie potrzebuje zapisu poza swoim katalogiem ani dostępu do /home
 NoNewPrivileges=true
 PrivateTmp=true
-ProtectSystem=strict
+ProtectSystem=full
 ProtectHome=true
-ReadWritePaths=/var/www/appkierowca/api
+ReadWritePaths=/var/www/kierowca-api
 ProtectKernelTunables=true
 ProtectControlGroups=true
 RestrictSUIDSGID=true

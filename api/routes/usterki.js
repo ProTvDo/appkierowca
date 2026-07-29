@@ -130,7 +130,11 @@ router.post('/', authMW, async (req, res) => {
 // ── GET /api/usterki/kategorie ───────────────────────────
 router.get('/kategorie', authMW, async (req, res) => {
   try {
-    const { rows } = await db.query('SELECT * FROM kategorie_usterek ORDER BY id');
+    // firma_id NULL = kategoria wspólna dla wszystkich; wartość = własna firmy
+    const { rows } = await db.query(
+      'SELECT * FROM kategorie_usterek WHERE firma_id IS NULL OR firma_id = $1 ORDER BY id',
+      [req.kierowca.firma_id]
+    );
     res.json(rows);
   } catch (e) {
     res.status(500).json({ error: e.message });
