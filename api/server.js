@@ -9,6 +9,7 @@ const kontaktyRoutes = require('./routes/kontakty');
 const szkoleniaRoutes = require('./routes/szkolenia');
 const wyjazdyRoutes = require('./routes/wyjazdy');
 const adminRoutes = require('./routes/admin');
+const importRoutes = require('./routes/import');
 
 const app = express();
 
@@ -23,7 +24,10 @@ app.use(cors({
   origin: dozwoloneOrigins,
   credentials: true
 }));
-app.use(express.json());
+// Domyślne 100 kB nie wystarcza na import miesięcznego grafiku — przy 40
+// kierowcach to ponad tysiąc wierszy i firma dostałaby tylko "413" bez
+// wyjaśnienia, co poszło nie tak.
+app.use(express.json({ limit: '5mb' }));
 
 // ── routes ──
 app.use('/api/auth',     authRoutes);
@@ -33,6 +37,7 @@ app.use('/api/kontakty', kontaktyRoutes);
 app.use('/api/szkolenia', szkoleniaRoutes);
 app.use('/api/wyjazdy', wyjazdyRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/import', importRoutes);
 
 // ── health check ──
 app.get('/api/ping', (req, res) => res.json({ ok: true, czas: new Date() }));
