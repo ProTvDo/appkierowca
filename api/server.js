@@ -10,6 +10,7 @@ const szkoleniaRoutes = require('./routes/szkolenia');
 const wyjazdyRoutes = require('./routes/wyjazdy');
 const adminRoutes = require('./routes/admin');
 const importRoutes = require('./routes/import');
+const firmyRoutes = require('./routes/firmy');
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/szkolenia', szkoleniaRoutes);
 app.use('/api/wyjazdy', wyjazdyRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/import', importRoutes);
+app.use('/api/firmy', firmyRoutes);
 
 // ── health check ──
 app.get('/api/ping', (req, res) => res.json({ ok: true, czas: new Date() }));

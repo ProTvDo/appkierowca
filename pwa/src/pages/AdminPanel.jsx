@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import api from '../api'
 import Toast from '../components/Toast'
+import ImportDanych from './ImportDanych'
 
 export default function AdminPanel({ kierowca, onLogout }) {
+  const [zakladka, setZakladka]  = useState('wyjazd')
   const [kierowcy, setKierowcy] = useState([])
   const [pojazdy, setPojazdy]   = useState([])
   const [sending, setSending]   = useState(false)
@@ -61,7 +63,16 @@ export default function AdminPanel({ kierowca, onLogout }) {
         <button className="hero-logout" onClick={onLogout}>Wyloguj ↩</button>
       </div>
 
-      <div className="form-wrap">
+      <div className="zakladki">
+        <button className={zakladka === 'wyjazd' ? 'zakladka aktywna' : 'zakladka'}
+                onClick={() => setZakladka('wyjazd')}>Przypisz wyjazd</button>
+        <button className={zakladka === 'import' ? 'zakladka aktywna' : 'zakladka'}
+                onClick={() => setZakladka('import')}>Wgraj dane</button>
+      </div>
+
+      {zakladka === 'import' && <ImportDanych />}
+
+      <div className="form-wrap" style={{ display: zakladka === 'wyjazd' ? undefined : 'none' }}>
         <div>
           <div className="form-label">Kierowca *</div>
           <select className="form-select" value={form.kierowca_id} onChange={e => ustaw('kierowca_id', e.target.value)}>

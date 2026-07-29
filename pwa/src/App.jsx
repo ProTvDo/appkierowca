@@ -10,6 +10,7 @@ import Szkolenia from './pages/Szkolenia'
 import SzkolenieDetal from './pages/SzkolenieDetal'
 import Test from './pages/Test'
 import AdminPanel from './pages/AdminPanel'
+import FirmyPanel from './pages/FirmyPanel'
 import BottomNav from './components/BottomNav'
 import './App.css'
 
@@ -63,6 +64,18 @@ export default function App() {
 
   if (!token) {
     return <Login onLogin={login} />
+  }
+
+  // Superadmin (ProTvDo) zarządza firmami; admin to dyspozytor po stronie
+  // firmy i widzi wyłącznie jej dane.
+  if (kierowca.rola === 'superadmin') {
+    return (
+      <div className="app">
+        <div className="screen-wrap">
+          <FirmyPanel onLogout={logout} />
+        </div>
+      </div>
+    )
   }
 
   if (kierowca.rola === 'admin') {

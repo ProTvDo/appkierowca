@@ -99,4 +99,10 @@ alter table kierowcy drop constraint if exists kierowcy_nr_sluzbowy_key;
 create unique index if not exists kierowcy_firma_nr_sluzbowy_key
   on kierowcy(firma_id, nr_sluzbowy);
 
+-- Rola ponad firmami: zakłada firmy, ustawia i przedłuża okresy próbne.
+-- 'admin' to dyspozytor po stronie firmy i nie widzi niczego spoza niej.
+alter table kierowcy drop constraint if exists kierowcy_rola_check;
+alter table kierowcy add constraint kierowcy_rola_check
+  check (rola in ('kierowca', 'admin', 'superadmin'));
+
 commit;
