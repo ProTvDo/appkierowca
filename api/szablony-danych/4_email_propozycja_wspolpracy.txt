@@ -1,0 +1,83 @@
+Temat: Propozycja współpracy — AppKierowca, aplikacja dla kierowców [NAZWA FIRMY]
+
+---
+
+Dzień dobry,
+
+piszę z propozycją wypróbowania AppKierowca — aplikacji mobilnej dla kierowców, która porządkuje codzienną pracę floty: grafik/wyjazdy, zgłaszanie usterek, kontakty do dyspozytorni i moduł szkoleniowy dla kierowców — wszystko w jednym miejscu, bez papierowych grafików i gubienia informacji.
+
+Aplikacja ma wersje dopasowane do rodzaju floty — miejską, turystyczną i dalekobieżną — więc kierowcy widzą tylko to, czego faktycznie potrzebują w swojej pracy.
+
+Chętnie udostępnię Państwu bezpłatną wersję testową na miesiąc, żeby zobaczyli Państwo, jak to działa z prawdziwymi kierowcami — bez żadnych zobowiązań. Cały proces jest prosty:
+
+1. Odpisują Państwo, jaki rodzaj floty prowadzą (miejska / turystyczna / dalekobieżna).
+2. W ciągu 24 godzin przygotowuję dostęp dopasowany do Państwa floty.
+3. Testujecie Państwo miesiąc za darmo — wystarczy przeglądarka na telefonie, nic nie trzeba instalować.
+
+Więcej o aplikacji: https://appkierowca.pl
+
+Chętnie odpowiem na pytania i umówię krótką prezentację, jeśli byłoby to pomocne.
+
+Pozdrawiam,
+[IMIĘ I NAZWISKO]
+[TELEFON]
+[E-MAIL]
+AppKierowca
+
+
+==================================================
+WARIANT KRÓTSZY (np. jako follow-up albo do osób, które już coś o Was słyszały)
+==================================================
+
+Temat: AppKierowca — bezpłatny miesiąc testów dla [NAZWA FIRMY]
+
+Dzień dobry,
+
+Krótko: mam aplikację dla kierowców (grafik/wyjazdy, zgłaszanie usterek, szkolenia — dopasowaną do typu floty: miejska/turystyczna/dalekobieżna) i chętnie dam Państwu miesiąc bezpłatnego testu z prawdziwymi kierowcami, bez zobowiązań.
+
+Wystarczy, że odpiszą Państwo, jaki mają rodzaj floty i ilu kierowców — resztę (dostęp, loginy) przygotowuję w ciągu 24h.
+
+Więcej: https://appkierowca.pl
+
+Pozdrawiam,
+[IMIĘ I NAZWISKO]
+[TELEFON]
+
+
+==================================================
+WARIANT DLA FIRM TURYSTYCZNYCH (po rozmowie / do znanego kontaktu) — z rozróżnieniem demo pokazowego i demo miesięcznego
+==================================================
+
+Temat: AppKierowca dla [NAZWA FIRMY] — informacje i demo
+
+Dzień dobry [IMIĘ],
+
+[Wybierz jedno zdanie otwierające, zależnie od sytuacji:
+— Po rozmowie telefonicznej: "Dziękuję za rozmowę — tak jak wspominałem/wspominałam, przesyłam więcej informacji o AppKierowca."
+— Bezpośrednio, do znanego kontaktu: "Piszę z krótką informacją o AppKierowca — aplikacji, którą rozwijam dla firm turystycznych."]
+
+AppKierowca to aplikacja dla kierowców autokarów turystycznych, która porządkuje pracę w trasie:
+
+- wyjazdy z pełnymi danymi zlecenia (cel podróży, godziny podstawienia i wyjazdu, dane pilota grupy),
+- rozliczanie pobranej zaliczki i tankowań bezpośrednio z telefonu w trakcie wyjazdu,
+- automatyczny e-mail z podsumowaniem do biura po zakończeniu wyjazdu,
+- zgłaszanie usterek pojazdu,
+- moduł szkoleniowy dla kierowców (materiały, filmy, testy wiedzy).
+
+Więcej można zobaczyć na: https://appkierowca.pl
+
+Na stronie jest dostępne **demo pokazowe** — można od razu, bez zakładania niczego, zobaczyć jak aplikacja wygląda i działa (na przykładowych danych).
+
+Jeśli chcieliby Państwo przetestować to naprawdę, ze swoją flotą — mogę przygotować bezpłatne **demo miesięczne** z prawdziwymi kontami dla Państwa kierowców i prawdziwymi danymi (pojazdy, wyjazdy), żeby zobaczyć, jak to sprawdza się w codziennej pracy, bez żadnych zobowiązań. Wystarczy, że prześlą Państwo:
+
+- listę kierowców, którzy mają dostać dostęp,
+- dane pojazdu/pojazdów (nr rejestracyjny, marka/model),
+- kto będzie odpowiadał za przypisywanie wyjazdów (dyspozytor).
+
+Chętnie odpowiem na pytania.
+
+Pozdrawiam,
+[IMIĘ I NAZWISKO]
+[TELEFON]
+[E-MAIL]
+AppKierowca
