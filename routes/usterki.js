@@ -1,11 +1,10 @@
 const express    = require('express');
-const supabase   = require('../supabaseClient');
+const db         = require('../db');
 const authMW     = require('../middleware/auth');
 const nodemailer = require('nodemailer');
 
 const router = express.Router();
 
-// Konfiguracja e-mail — ustaw w .env
 const transporter = nodemailer.createTransport({
   host:   process.env.SMTP_HOST   || 'smtp.gmail.com',
   port:   parseInt(process.env.SMTP_PORT) || 587,
@@ -21,18 +20,30 @@ const transporter = nodemailer.createTransport({
 router.get('/', authMW, async (req, res) => {
   const kierowcaId = req.kierowca.id;
 
-  const { data, error } = await supabase
-    .from('usterki')
-    .select(`
-      id, opis, lokalizacja, status, zdjecie_url, created_at,
-      pojazdy ( nr_boczny, marka, model ),
-      kategorie_usterek ( nazwa, ikona )
-    `)
-    .eq('kierowca_id', kierowcaId)
-    .order('created_at', { ascending: false });
+  try {
+    const { rows } = await db.query(
+      `SELECT u.id, u.opis, u.lokalizacja, u.status, u.zdjecie_url, u.created_at,
+              p.nr_boczny, p.marka, p.model,
+              k.nazwa AS kategoria_nazwa, k.ikona AS kategoria_ikona
+       FROM usterki u
+       LEFT JOIN pojazdy p ON p.id = u.pojazd_id
+       LEFT JOIN kategorie_usterek k ON k.id = u.kategoria_id
+       WHERE u.kierowca_id = $1
+       ORDER BY u.created_at DESC`,
+      [kierowcaId]
+    );
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+    const wynik = rows.map(r => ({
+      id: r.id, opis: r.opis, lokalizacja: r.lokalizacja, status: r.status,
+      zdjecie_url: r.zdjecie_url, created_at: r.created_at,
+      pojazdy: r.nr_boczny ? { nr_boczny: r.nr_boczny, marka: r.marka, model: r.model } : null,
+      kategorie_usterek: r.kategoria_nazwa ? { nazwa: r.kategoria_nazwa, ikona: r.kategoria_ikona } : null,
+    }));
+
+    res.json(wynik);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── POST /api/usterki ────────────────────────────────────
@@ -45,26 +56,36 @@ router.post('/', authMW, async (req, res) => {
     return res.status(400).json({ error: 'Podaj pojazd i kategorię usterki' });
   }
 
-  // Zapisz usterkę
-  const { data: usterka, error } = await supabase
-    .from('usterki')
-    .insert({
-      kierowca_id:  kierowcaId,
-      pojazd_id,
-      kategoria_id,
-      opis,
-      lokalizacja,
-      status: 'nowa'
-    })
-    .select(`
-      id,
-      pojazdy ( nr_boczny, marka, model ),
-      kategorie_usterek ( nazwa, ikona ),
-      kierowcy ( imie, nazwisko, nr_sluzbowy )
-    `)
-    .single();
+  let usterka;
+  try {
+    const { rows: usterkiRows } = await db.query(
+      `INSERT INTO usterki (kierowca_id, pojazd_id, kategoria_id, opis, lokalizacja, status)
+       VALUES ($1, $2, $3, $4, $5, 'nowa')
+       RETURNING id`,
+      [kierowcaId, pojazd_id, kategoria_id, opis, lokalizacja]
+    );
+    const id = usterkiRows[0].id;
 
-  if (error) return res.status(500).json({ error: error.message });
+    const { rows } = await db.query(
+      `SELECT u.id, p.nr_boczny, p.marka, p.model, k.nazwa AS kategoria_nazwa, k.ikona AS kategoria_ikona,
+              d.imie, d.nazwisko, d.nr_sluzbowy
+       FROM usterki u
+       LEFT JOIN pojazdy p ON p.id = u.pojazd_id
+       LEFT JOIN kategorie_usterek k ON k.id = u.kategoria_id
+       LEFT JOIN kierowcy d ON d.id = u.kierowca_id
+       WHERE u.id = $1`,
+      [id]
+    );
+    const r = rows[0];
+    usterka = {
+      id: r.id,
+      pojazdy: { nr_boczny: r.nr_boczny, marka: r.marka, model: r.model },
+      kategorie_usterek: { nazwa: r.kategoria_nazwa, ikona: r.kategoria_ikona },
+      kierowcy: { imie: r.imie, nazwisko: r.nazwisko, nr_sluzbowy: r.nr_sluzbowy },
+    };
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
 
   // Wyślij e-mail do mistrza
   const emailTo = process.env.EMAIL_MISTRZ || process.env.SMTP_USER;
@@ -97,10 +118,9 @@ router.post('/', authMW, async (req, res) => {
         `
       });
 
-      await supabase.from('usterki').update({ email_wyslany: true }).eq('id', usterka.id);
+      await db.query('UPDATE usterki SET email_wyslany = true WHERE id = $1', [usterka.id]);
     } catch (emailErr) {
       console.error('Błąd wysyłki e-mail:', emailErr.message);
-      // nie przerywamy — usterka zapisana, tylko mail nie poszedł
     }
   }
 
@@ -109,13 +129,12 @@ router.post('/', authMW, async (req, res) => {
 
 // ── GET /api/usterki/kategorie ───────────────────────────
 router.get('/kategorie', authMW, async (req, res) => {
-  const { data, error } = await supabase
-    .from('kategorie_usterek')
-    .select('*')
-    .order('id');
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  try {
+    const { rows } = await db.query('SELECT * FROM kategorie_usterek ORDER BY id');
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 module.exports = router;

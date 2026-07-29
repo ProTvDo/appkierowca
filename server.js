@@ -13,7 +13,7 @@ const adminRoutes = require('./routes/admin');
 const app = express();
 
 app.use(cors({
-  origin: ['https://appkierowca.netlify.app', 'https://appkierowcagdynia.netlify.app', 'http://localhost:5174', 'http://localhost:5173'],
+  origin: ['http://localhost:5174', 'http://localhost:5173'],
   credentials: true
 }));
 app.use(express.json());
@@ -30,5 +30,5 @@ app.use('/api/admin', adminRoutes);
 // ── health check ──
 app.get('/api/ping', (req, res) => res.json({ ok: true, czas: new Date() }));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => console.log(`KierowcaApp API działa na porcie ${PORT}`));

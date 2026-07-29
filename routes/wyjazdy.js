@@ -1,5 +1,5 @@
 const express    = require('express');
-const supabase   = require('../supabaseClient');
+const db         = require('../db');
 const authMW     = require('../middleware/auth');
 const nodemailer = require('nodemailer');
 
@@ -23,14 +23,15 @@ const POLA = 'id, data, cel_podrozy, godz_wyjazdu, godz_podstawienia, godz_dojaz
 router.get('/', authMW, async (req, res) => {
   const kierowcaId = req.kierowca.id;
 
-  const { data, error } = await supabase
-    .from('wyjazdy_turystyczne')
-    .select(POLA)
-    .eq('kierowca_id', kierowcaId)
-    .order('data', { ascending: true });
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  try {
+    const { rows } = await db.query(
+      `SELECT ${POLA} FROM wyjazdy_turystyczne WHERE kierowca_id = $1 ORDER BY data ASC`,
+      [kierowcaId]
+    );
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── GET /api/wyjazdy/najblizszy ───────────────────────────
@@ -39,17 +40,17 @@ router.get('/najblizszy', authMW, async (req, res) => {
   const kierowcaId = req.kierowca.id;
   const dzisiaj = new Date().toISOString().split('T')[0];
 
-  const { data, error } = await supabase
-    .from('wyjazdy_turystyczne')
-    .select(POLA)
-    .eq('kierowca_id', kierowcaId)
-    .gte('data', dzisiaj)
-    .order('data', { ascending: true })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  try {
+    const { rows } = await db.query(
+      `SELECT ${POLA} FROM wyjazdy_turystyczne
+       WHERE kierowca_id = $1 AND data >= $2
+       ORDER BY data ASC LIMIT 1`,
+      [kierowcaId, dzisiaj]
+    );
+    res.json(rows[0] || null);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── POST /api/wyjazdy/:id/zaliczka ────────────────────────
@@ -59,16 +60,18 @@ router.post('/:id/zaliczka', authMW, async (req, res) => {
   const { zaliczka } = req.body;
   const kierowcaId = req.kierowca.id;
 
-  const { data, error } = await supabase
-    .from('wyjazdy_turystyczne')
-    .update({ zaliczka })
-    .eq('id', id)
-    .eq('kierowca_id', kierowcaId)
-    .select()
-    .single();
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  try {
+    const { rows } = await db.query(
+      `UPDATE wyjazdy_turystyczne SET zaliczka = $1
+       WHERE id = $2 AND kierowca_id = $3
+       RETURNING ${POLA}`,
+      [zaliczka, id, kierowcaId]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: 'Wyjazd nie znaleziony' });
+    res.json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── POST /api/wyjazdy/:id/tankowanie ──────────────────────
@@ -82,38 +85,37 @@ router.post('/:id/tankowanie', authMW, async (req, res) => {
     return res.status(400).json({ error: 'Podaj litry i koszt' });
   }
 
-  // Upewnij się, że wyjazd należy do zalogowanego kierowcy
-  const { data: wyjazd } = await supabase
-    .from('wyjazdy_turystyczne')
-    .select('id')
-    .eq('id', id)
-    .eq('kierowca_id', kierowcaId)
-    .maybeSingle();
+  try {
+    // Upewnij się, że wyjazd należy do zalogowanego kierowcy
+    const { rows: wyjazdRows } = await db.query(
+      `SELECT id FROM wyjazdy_turystyczne WHERE id = $1 AND kierowca_id = $2`,
+      [id, kierowcaId]
+    );
+    if (wyjazdRows.length === 0) return res.status(404).json({ error: 'Wyjazd nie znaleziony' });
 
-  if (!wyjazd) return res.status(404).json({ error: 'Wyjazd nie znaleziony' });
-
-  const { data, error } = await supabase
-    .from('tankowania')
-    .insert({ wyjazd_id: id, litry, koszt })
-    .select()
-    .single();
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.status(201).json(data);
+    const { rows } = await db.query(
+      `INSERT INTO tankowania (wyjazd_id, litry, koszt) VALUES ($1, $2, $3) RETURNING *`,
+      [id, litry, koszt]
+    );
+    res.status(201).json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── GET /api/wyjazdy/:id/tankowania ───────────────────────
 router.get('/:id/tankowania', authMW, async (req, res) => {
   const { id } = req.params;
 
-  const { data, error } = await supabase
-    .from('tankowania')
-    .select('id, litry, koszt, created_at')
-    .eq('wyjazd_id', id)
-    .order('created_at');
-
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  try {
+    const { rows } = await db.query(
+      `SELECT id, litry, koszt, created_at FROM tankowania WHERE wyjazd_id = $1 ORDER BY created_at`,
+      [id]
+    );
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 // ── POST /api/wyjazdy/:id/zakoncz ─────────────────────────
@@ -122,29 +124,39 @@ router.post('/:id/zakoncz', authMW, async (req, res) => {
   const { id } = req.params;
   const kierowcaId = req.kierowca.id;
 
-  const { data: wyjazd, error: eWyjazd } = await supabase
-    .from('wyjazdy_turystyczne')
-    .update({ zakonczony: true })
-    .eq('id', id)
-    .eq('kierowca_id', kierowcaId)
-    .select(`${POLA}, kierowcy ( imie, nazwisko )`)
-    .single();
+  let wyjazd, tankowania;
+  try {
+    const { rows: updRows } = await db.query(
+      `UPDATE wyjazdy_turystyczne SET zakonczony = true
+       WHERE id = $1 AND kierowca_id = $2
+       RETURNING ${POLA}`,
+      [id, kierowcaId]
+    );
+    if (updRows.length === 0) return res.status(404).json({ error: 'Wyjazd nie znaleziony' });
 
-  if (eWyjazd || !wyjazd) return res.status(404).json({ error: 'Wyjazd nie znaleziony' });
+    const { rows: kierowcyRows } = await db.query(
+      `SELECT imie, nazwisko FROM kierowcy WHERE id = $1`,
+      [kierowcaId]
+    );
 
-  const { data: tankowania } = await supabase
-    .from('tankowania')
-    .select('litry, koszt, created_at')
-    .eq('wyjazd_id', id)
-    .order('created_at');
+    wyjazd = { ...updRows[0], kierowcy: kierowcyRows[0] || null };
 
-  const sumaLitrow = (tankowania || []).reduce((s, t) => s + Number(t.litry), 0);
-  const sumaKosztow = (tankowania || []).reduce((s, t) => s + Number(t.koszt), 0);
+    const { rows: tankRows } = await db.query(
+      `SELECT litry, koszt, created_at FROM tankowania WHERE wyjazd_id = $1 ORDER BY created_at`,
+      [id]
+    );
+    tankowania = tankRows;
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+
+  const sumaLitrow = tankowania.reduce((s, t) => s + Number(t.litry), 0);
+  const sumaKosztow = tankowania.reduce((s, t) => s + Number(t.koszt), 0);
 
   const emailTo = process.env.EMAIL_BIURO || process.env.SMTP_USER;
   if (emailTo && process.env.SMTP_USER) {
     try {
-      const wierszeTankowan = (tankowania || [])
+      const wierszeTankowan = tankowania
         .map(t => `<tr><td style="padding:4px 12px">${new Date(t.created_at).toLocaleString('pl-PL')}</td><td style="padding:4px 12px">${t.litry} l</td><td style="padding:4px 12px">${t.koszt} zł</td></tr>`)
         .join('');
 
@@ -179,7 +191,7 @@ router.post('/:id/zakoncz', authMW, async (req, res) => {
     }
   }
 
-  res.json({ ok: true, wyjazd, tankowania: tankowania || [], suma_litrow: sumaLitrow, suma_kosztow: sumaKosztow });
+  res.json({ ok: true, wyjazd, tankowania, suma_litrow: sumaLitrow, suma_kosztow: sumaKosztow });
 });
 
 module.exports = router;
