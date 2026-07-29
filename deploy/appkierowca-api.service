@@ -1,0 +1,35 @@
+[Unit]
+Description=AppKierowca API (Express + PostgreSQL)
+Documentation=https://github.com/ProTvDo/appkierowca
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=appkierowca
+Group=appkierowca
+WorkingDirectory=/var/www/appkierowca/api
+EnvironmentFile=/var/www/appkierowca/api/.env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+
+# Backend nasłuchuje tylko lokalnie — na świat wystawia go nginx
+Environment=NODE_ENV=production
+
+# Ograniczenia — usługa nie potrzebuje niczego poza swoim katalogiem
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/www/appkierowca/api
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=appkierowca-api
+
+[Install]
+WantedBy=multi-user.target

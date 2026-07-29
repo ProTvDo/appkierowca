@@ -12,8 +12,15 @@ const adminRoutes = require('./routes/admin');
 
 const app = express();
 
+// Na produkcji frontend chodzi po tym samym origin (nginx przekazuje /api),
+// więc CORS dotyczy tylko wejścia bezpośrednio na api.appkierowca.pl i devu.
+const dozwoloneOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://localhost:5174')
+  .split(',')
+  .map(o => o.trim())
+  .filter(Boolean);
+
 app.use(cors({
-  origin: ['http://localhost:5174', 'http://localhost:5173'],
+  origin: dozwoloneOrigins,
   credentials: true
 }));
 app.use(express.json());
