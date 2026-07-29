@@ -105,4 +105,18 @@ alter table kierowcy drop constraint if exists kierowcy_rola_check;
 alter table kierowcy add constraint kierowcy_rola_check
   check (rola in ('kierowca', 'admin', 'superadmin'));
 
+-- ── 5. Uprawnienia ────────────────────────────────────────────────────────
+-- Migrację uruchamia się jako postgres, więc nowa tabela należy do niego.
+-- Bez tego aplikacja (kierowcaapp_user) dostaje "permission denied for table
+-- firmy" przy każdym logowaniu — a logowanie odpytuje firmy zawsze.
+do $$
+begin
+  if exists (select 1 from pg_roles where rolname = 'kierowcaapp_user') then
+    grant all privileges on all tables    in schema public to kierowcaapp_user;
+    grant all privileges on all sequences in schema public to kierowcaapp_user;
+    alter default privileges in schema public grant all on tables    to kierowcaapp_user;
+    alter default privileges in schema public grant all on sequences to kierowcaapp_user;
+  end if;
+end $$;
+
 commit;
