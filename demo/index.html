@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>KierowcaApp — Demo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+  :root {
+    --bg:#0f1117;--surface:#181c27;--card:#1e2334;--border:#2a3048;
+    --accent:#f5a623;--accent2:#3b82f6;--green:#22c55e;--red:#ef4444;
+    --text:#e8eaf0;--muted:#6b7594;--radius:14px;--phone-w:390px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#080b14;font-family:'Inter',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 16px 48px;}
+  .demo-header{text-align:center;margin-bottom:28px;}
+  .demo-badge{display:inline-block;background:var(--accent);color:#000;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:10px;}
+  .demo-header h1{font-size:22px;font-weight:700;color:#fff;}
+  .demo-header p{font-size:13px;color:var(--muted);margin-top:4px;}
+  .phone{width:min(var(--phone-w),100%);background:var(--bg);border-radius:36px;border:2px solid var(--border);overflow:hidden;box-shadow:0 40px 80px #000a;}
+  .statusbar{background:var(--surface);display:flex;justify-content:space-between;align-items:center;padding:10px 20px 6px;font-size:12px;font-weight:600;color:var(--muted);}
+  .statusbar .time{color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;}
+  .screen{display:none;flex-direction:column;min-height:680px;}
+  .screen.active{display:flex;}
+  .topbar{background:var(--surface);padding:14px 20px 12px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);}
+  .topbar-back{width:32px;height:32px;background:var(--card);border:none;border-radius:8px;color:var(--text);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .topbar h2{font-size:16px;font-weight:600;flex:1;}
+  .topbar .topbar-icon{font-size:20px;}
+
+  /* LOGIN */
+  #screen-login{background:linear-gradient(160deg,#0f1525 0%,#0f1117 60%);justify-content:flex-start;}
+  .login-logo{text-align:center;padding:36px 24px 24px;}
+  .login-logo .logo-bus{font-size:48px;margin-bottom:12px;display:block;filter:drop-shadow(0 0 20px rgba(245,166,35,.4));}
+  .login-logo h2{font-size:22px;font-weight:700;color:#fff;letter-spacing:-.3px;}
+  .login-logo p{font-size:12px;color:var(--muted);margin-top:4px;}
+  .login-form{padding:0 24px;display:flex;flex-direction:column;gap:14px;}
+  .login-label{font-size:11px;color:var(--muted);font-weight:600;margin-bottom:5px;letter-spacing:.06em;text-transform:uppercase;}
+  .login-input{width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:'Inter',sans-serif;font-size:16px;padding:13px 14px;outline:none;transition:border-color .2s;}
+  .login-input:focus{border-color:var(--accent);}
+  .login-input.mono{font-family:'JetBrains Mono',monospace;letter-spacing:.1em;}
+  .pin-display{display:flex;gap:10px;justify-content:center;margin:4px 0 8px;}
+  .pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:background .15s,border-color .15s;}
+  .pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+  .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px;}
+  .pin-btn{background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:20px;font-weight:600;font-family:'JetBrains Mono',monospace;padding:14px 0;cursor:pointer;transition:background .1s,transform .08s;text-align:center;}
+  .pin-btn:active{transform:scale(.93);background:#252b3d;}
+  .pin-btn.del{font-size:16px;color:var(--muted);}
+  .pin-btn.empty{background:transparent;border-color:transparent;cursor:default;}
+  .login-btn{background:var(--accent);color:#000;border:none;border-radius:12px;padding:15px;font-size:15px;font-weight:700;cursor:pointer;margin-top:4px;transition:opacity .15s;width:100%;}
+  .login-btn:active{opacity:.8;}
+  .login-btn:disabled{opacity:.4;cursor:default;}
+  .login-hint{text-align:center;font-size:12px;color:var(--muted);padding:10px 0 6px;}
+  .login-hint b{color:var(--accent);}
+  .login-error{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);border-radius:10px;padding:10px 14px;font-size:13px;color:#fca5a5;text-align:center;display:none;}
+  .login-error.show{display:block;}
+
+  /* HOME HERO */
+  #screen-home .hero{background:linear-gradient(135deg,#1a2340 0%,#0f1117 100%);padding:18px 18px 14px;border-bottom:1px solid var(--border);}
+  .hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+  .hero-greeting{font-size:12px;color:var(--muted);}
+  .hero-name{font-size:19px;font-weight:700;color:#fff;margin-top:2px;}
+  .hero-logout{background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:11px;padding:5px 10px;cursor:pointer;white-space:nowrap;}
+  .hero-logout:hover{color:var(--red);border-color:var(--red);}
+  /* 3-kolumnowa karta */
+  .hero-card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;overflow:hidden;}
+  .hero-stat{padding:11px 8px;display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;}
+  .hero-stat-label{font-size:9px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em;}
+  .hero-stat-value{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--accent);line-height:1;}
+  .hero-stat-sub{font-size:9px;color:var(--muted);}
+  .hero-divider{background:var(--border);}
+  .hero-shift-row{margin-top:10px;display:flex;align-items:center;gap:8px;}
+  .shift-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(245,166,35,.15);border:1px solid rgba(245,166,35,.3);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--accent);font-weight:600;}
+  .shift-pill::before{content:'●';font-size:7px;}
+  .shift-depot{margin-left:auto;font-size:11px;color:var(--muted);}
+
+  /* TILES */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:14px;flex:1;}
+  .tile{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:15px 13px 12px;cursor:pointer;transition:background .15s,transform .1s;display:flex;flex-direction:column;align-items:flex-start;gap:6px;}
+  .tile:active{transform:scale(.97);}
+  .tile:hover{background:#252b3d;}
+  .tile-icon{font-size:24px;}
+  .tile-label{font-size:13px;font-weight:600;color:var(--text);line-height:1.3;}
+  .tile-sub{font-size:11px;color:var(--muted);}
+  .tile.wide{grid-column:span 2;flex-direction:row;align-items:center;gap:14px;padding:13px 15px;}
+  .badge{display:inline-block;background:var(--red);color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:1px 6px;margin-left:auto;}
+
+  /* GRAFIK */
+  .month-nav{display:flex;align-items:center;justify-content:space-between;padding:13px 20px 8px;}
+  .month-nav span{font-size:15px;font-weight:600;}
+  .month-nav button{background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:4px 10px;cursor:pointer;font-size:14px;}
+  .day-row{display:flex;align-items:stretch;padding:7px 18px;gap:12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+  .day-row:hover{background:var(--card);}
+  .day-row.today{background:rgba(245,166,35,.07);border-left:3px solid var(--accent);}
+  .day-date{width:40px;flex-shrink:0;}
+  .day-date .dd{font-size:19px;font-weight:700;line-height:1;}
+  .day-date .dw{font-size:10px;color:var(--muted);text-transform:uppercase;margin-top:2px;}
+  .day-info{flex:1;min-width:0;}
+  .day-shift{font-size:13px;font-weight:600;}
+  .day-line{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .day-hours{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:var(--accent);align-self:center;white-space:nowrap;}
+  .pill{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;margin-left:5px;vertical-align:middle;}
+  .pill.rano{background:rgba(59,130,246,.2);color:#93c5fd;}
+  .pill.popo{background:rgba(245,166,35,.2);color:var(--accent);}
+  .pill.noc{background:rgba(139,92,246,.2);color:#c4b5fd;}
+  .pill.wolne{background:rgba(107,117,148,.15);color:var(--muted);}
+
+  /* ROZKŁADY */
+  .route-card{margin:10px 14px 0;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:background .1s;}
+  .route-card:hover{background:#252b3d;}
+  .route-header{display:flex;align-items:center;gap:12px;padding:12px 14px;}
+  .route-num{width:40px;height:40px;background:var(--accent2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0;}
+  .route-num.t{background:#7c3aed;}
+  .route-info h3{font-size:13px;font-weight:600;}
+  .route-info p{font-size:11px;color:var(--muted);margin-top:2px;}
+  .route-arrow{margin-left:auto;color:var(--muted);}
+  .timetable{border-top:1px solid var(--border);padding:10px 14px;display:none;}
+  .timetable.open{display:block;}
+  .tt-row{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:12px;}
+  .tt-row:last-child{border-bottom:none;}
+  .tt-time{font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--accent);width:48px;}
+  .tt-stop{flex:1;}
+  .tt-track{font-size:11px;color:var(--muted);}
+
+  /* USTERKI */
+  .form-wrap{padding:14px;display:flex;flex-direction:column;gap:12px;flex:1;}
+  .form-label{font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500;}
+  .form-select,.form-input,.form-textarea{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:14px;padding:10px 12px;outline:none;transition:border-color .15s;appearance:none;}
+  .form-select:focus,.form-input:focus,.form-textarea:focus{border-color:var(--accent);}
+  .form-textarea{min-height:76px;resize:none;}
+  .form-select option{background:#1e2334;}
+  .photo-btn{background:var(--card);border:2px dashed var(--border);border-radius:10px;color:var(--muted);padding:16px;text-align:center;cursor:pointer;font-size:13px;transition:border-color .15s;}
+  .photo-btn:hover{border-color:var(--accent);color:var(--accent);}
+  .submit-btn{background:var(--accent);color:#000;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;margin-top:auto;transition:opacity .15s;width:100%;}
+  .submit-btn:active{opacity:.8;}
+
+  /* TOAST */
+  .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--green);color:#fff;font-size:13px;font-weight:600;padding:10px 20px;border-radius:20px;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap;z-index:999;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* TELEFONY */
+  .contact-group{padding:13px 14px 0;}
+  .contact-group-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;}
+  .contact-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:11px 13px;display:flex;align-items:center;gap:12px;margin-bottom:8px;cursor:pointer;transition:background .1s;}
+  .contact-card:hover{background:#252b3d;}
+  .contact-avatar{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+  .contact-avatar.blue{background:rgba(59,130,246,.2);}
+  .contact-avatar.orange{background:rgba(245,166,35,.2);}
+  .contact-avatar.green{background:rgba(34,197,94,.2);}
+  .contact-avatar.purple{background:rgba(139,92,246,.2);}
+  .contact-name{font-size:13px;font-weight:600;}
+  .contact-role{font-size:11px;color:var(--muted);margin-top:1px;}
+  .contact-phone{margin-left:auto;background:var(--green);color:#fff;border:none;border-radius:8px;padding:6px 11px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;}
+
+  /* DETAIL */
+  .detail-body{padding:18px;flex:1;overflow-y:auto;}
+  .info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .info-row:last-child{border-bottom:none;}
+  .info-key{color:var(--muted);}
+  .info-value{font-weight:600;}
+
+  /* HISTORIA */
+  .usterka-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 13px;margin-bottom:10px;}
+  .usterka-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .usterka-vehicle{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--accent);}
+  .usterka-status{margin-left:auto;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .usterka-status.nowa{background:rgba(239,68,68,.2);color:#fca5a5;}
+  .usterka-status.woczek{background:rgba(245,166,35,.2);color:var(--accent);}
+  .usterka-status.naprawiona{background:rgba(34,197,94,.2);color:#86efac;}
+  .usterka-desc{font-size:13px;font-weight:600;}
+  .usterka-meta{font-size:11px;color:var(--muted);margin-top:3px;}
+
+  /* WYJAZDY / SZKOLENIA (wspólne karty) */
+  .info-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin:10px 14px;overflow:hidden;}
+  .info-card.today{border-color:var(--accent);}
+  .info-card .info-row{padding:9px 14px;}
+  .info-card-actions{padding:12px 13px;border-top:1px solid var(--border);}
+  .tag-new{display:inline-block;background:rgba(245,166,35,.2);color:var(--accent);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:20px;margin-left:8px;vertical-align:middle;}
+  .mini-row{display:flex;gap:8px;margin-bottom:10px;}
+  .mini-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:8px 10px;outline:none;}
+  .mini-input:focus{border-color:var(--accent);}
+  .small-btn{background:var(--accent2);color:#fff;border:none;border-radius:8px;padding:0 14px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
+  .small-btn:active{opacity:.8;}
+  .tankowanie-item{font-size:11px;color:var(--muted);padding:2px 0;}
+  .finish-btn{background:var(--accent);color:#000;border:none;border-radius:10px;padding:11px;font-size:13px;font-weight:700;cursor:pointer;width:100%;margin-top:4px;}
+  .finish-btn:active{opacity:.8;}
+  .status-done{font-size:12px;font-weight:600;color:#86efac;padding:12px 13px;border-top:1px solid var(--border);}
+  .material-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px 14px;margin:0 14px 10px;cursor:pointer;transition:background .1s;}
+  .material-item:hover{background:#252b3d;}
+  .material-item h3{font-size:14px;font-weight:600;}
+  .material-item p{font-size:12px;color:var(--muted);margin-top:3px;}
+  .material-icon{font-size:20px;margin-right:8px;}
+  .video-wrap{position:relative;width:100%;padding-top:56.25%;margin:14px 0;border-radius:var(--radius);overflow:hidden;background:#000;}
+  .video-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+  .quiz-question{font-size:14px;font-weight:600;margin:16px 14px 8px;}
+  .quiz-option{display:block;width:calc(100% - 28px);text-align:left;background:var(--card);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:11px 13px;margin:0 14px 8px;cursor:pointer;transition:border-color .15s,background .15s;}
+  .quiz-option:hover{border-color:var(--accent2);}
+  .quiz-option.picked{border-color:var(--accent2);background:rgba(59,130,246,.12);}
+  .quiz-option.correct{border-color:var(--green);background:rgba(34,197,94,.15);}
+  .quiz-option.wrong{border-color:var(--red);background:rgba(239,68,68,.15);}
+  .quiz-result{margin:14px;padding:14px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);text-align:center;font-size:14px;font-weight:700;}
+
+  /* BOTTOM NAV */
+  .bottom-nav{background:var(--surface);border-top:1px solid var(--border);display:flex;padding:8px 0 12px;}
+  .nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:6px 0;opacity:.5;transition:opacity .15s;border:none;background:none;color:var(--text);}
+  .nav-item.active{opacity:1;color:var(--accent);}
+  .nav-item .nav-icon{font-size:22px;}
+  .nav-item .nav-label{font-size:10px;font-weight:600;}
+</style>
+</head>
+<body>
+
+<div class="demo-header">
+  <div class="demo-badge">📱 Demo / Wersja testowa</div>
+  <h1>KierowcaApp</h1>
+  <p>Aplikacja dla kierowców — prototyp funkcji</p>
+</div>
+
+<div class="phone">
+  <div class="statusbar">
+    <span class="time" id="clock">09:41</span>
+    <span>📶 🔋 94%</span>
+  </div>
+
+  <!-- ═══════════════════ LOGOWANIE ═══════════════════ -->
+  <div class="screen active" id="screen-login">
+    <div class="login-logo">
+      <span class="logo-bus">🚌</span>
+      <h2>KierowcaApp</h2>
+      <p>System informacji dla kierowców</p>
+    </div>
+    <div class="login-form">
+      <div>
+        <div class="login-label">Numer służbowy</div>
+        <input class="login-input mono" id="inp-nr" type="text" inputmode="numeric"
+               maxlength="6" placeholder="np. 2669"
+               oninput="this.value=this.value.replace(/\D/g,'');checkReady()">
+      </div>
+      <div>
+        <div class="login-label">PIN (4 cyfry)</div>
+        <div class="pin-display">
+          <div class="pin-dot" id="pd0"></div>
+          <div class="pin-dot" id="pd1"></div>
+          <div class="pin-dot" id="pd2"></div>
+          <div class="pin-dot" id="pd3"></div>
+        </div>
+        <div class="pin-pad">
+          <button class="pin-btn" onclick="pp('1')">1</button>
+          <button class="pin-btn" onclick="pp('2')">2</button>
+          <button class="pin-btn" onclick="pp('3')">3</button>
+          <button class="pin-btn" onclick="pp('4')">4</button>
+          <button class="pin-btn" onclick="pp('5')">5</button>
+          <button class="pin-btn" onclick="pp('6')">6</button>
+          <button class="pin-btn" onclick="pp('7')">7</button>
+          <button class="pin-btn" onclick="pp('8')">8</button>
+          <button class="pin-btn" onclick="pp('9')">9</button>
+          <button class="pin-btn empty"></button>
+          <button class="pin-btn" onclick="pp('0')">0</button>
+          <button class="pin-btn del" onclick="pd()">⌫</button>
+        </div>
+      </div>
+      <div class="login-error" id="login-err">Nieprawidłowy numer służbowy lub PIN.</div>
+      <button class="login-btn" id="btn-login" onclick="doLogin()" disabled>Zaloguj się</button>
+      <div class="login-hint">Demo miejski: <b>2669</b> / PIN <b>1234</b> &nbsp;·&nbsp; Demo turystyka: <b>9000</b> / PIN <b>1234</b></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ HOME ═══════════════════ -->
+  <div class="screen" id="screen-home">
+    <div class="hero">
+      <div class="hero-top">
+        <div>
+          <div class="hero-greeting">Dzień dobry,</div>
+          <div class="hero-name" id="h-name">—</div>
+        </div>
+        <button class="hero-logout" onclick="doLogout()">Wyloguj ↩</button>
+      </div>
+      <div class="hero-card">
+        <div class="hero-stat">
+          <div class="hero-stat-label">Nr służbowy</div>
+          <div class="hero-stat-value" id="h-nr">—</div>
+          <div class="hero-stat-sub">identyfikator</div>
+        </div>
+        <div class="hero-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-label" id="h-linia-label">Linia / Brygada</div>
+          <div class="hero-stat-value" id="h-linia">—</div>
+          <div class="hero-stat-sub" id="h-linia-sub">dziś</div>
+        </div>
+        <div class="hero-divider"></div>
+        <div class="hero-stat">
+          <div class="hero-stat-label" id="h-pojazd-label">Nr boczny</div>
+          <div class="hero-stat-value" id="h-pojazd">—</div>
+          <div class="hero-stat-sub">pojazd</div>
+        </div>
+      </div>
+      <div class="hero-shift-row">
+        <div class="shift-pill" id="h-zmiana">—</div>
+        <div class="shift-depot" id="h-depot">—</div>
+      </div>
+    </div>
+    <div class="grid" id="grid-miejski">
+      <div class="tile" onclick="go('grafik')">
+        <div class="tile-icon">📅</div>
+        <div class="tile-label">Grafik pracy</div>
+        <div class="tile-sub">Czerwiec 2026</div>
+      </div>
+      <div class="tile" onclick="go('rozklady')">
+        <div class="tile-icon">🗺️</div>
+        <div class="tile-label">Rozkłady jazdy</div>
+        <div class="tile-sub">Linie autobusowe</div>
+      </div>
+      <div class="tile" onclick="go('usterki')">
+        <div class="tile-icon">🔧</div>
+        <div class="tile-label">Zgłoś usterkę</div>
+        <div class="tile-sub">Formularz</div>
+        <span class="badge">!</span>
+      </div>
+      <div class="tile" onclick="go('telefony')">
+        <div class="tile-icon">📞</div>
+        <div class="tile-label">Telefony</div>
+        <div class="tile-sub">Kontakty</div>
+      </div>
+      <div class="tile" onclick="go('szkolenia')">
+        <div class="tile-icon">🎓</div>
+        <div class="tile-label">Szkolenia</div>
+        <div class="tile-sub">Baza wiedzy i testy</div>
+      </div>
+      <div class="tile wide" onclick="go('historia')">
+        <div class="tile-icon">📋</div>
+        <div>
+          <div class="tile-label">Historia zgłoszeń</div>
+          <div class="tile-sub">Moje usterki · 3 zgłoszenia</div>
+        </div>
+      </div>
+    </div>
+    <div class="grid" id="grid-turystyka" style="display:none;">
+      <div class="tile" onclick="go('wyjazdy')">
+        <div class="tile-icon">🧳</div>
+        <div class="tile-label">Moje wyjazdy</div>
+        <div class="tile-sub">Wyjazdy z grupą</div>
+      </div>
+      <div class="tile" onclick="go('usterki')">
+        <div class="tile-icon">🔧</div>
+        <div class="tile-label">Zgłoś usterkę</div>
+        <div class="tile-sub">Formularz</div>
+      </div>
+      <div class="tile" onclick="go('telefony')">
+        <div class="tile-icon">📞</div>
+        <div class="tile-label">Telefony</div>
+        <div class="tile-sub">Kontakty</div>
+      </div>
+      <div class="tile" onclick="go('szkolenia')">
+        <div class="tile-icon">🎓</div>
+        <div class="tile-label">Szkolenia</div>
+        <div class="tile-sub">Baza wiedzy i testy</div>
+      </div>
+      <div class="tile wide" onclick="go('historia')">
+        <div class="tile-icon">📋</div>
+        <div>
+          <div class="tile-label">Historia zgłoszeń</div>
+          <div class="tile-sub">Moje usterki</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ GRAFIK ═══════════════════ -->
+  <div class="screen" id="screen-grafik">
+    <div class="topbar">
+      <button class="topbar-back" onclick="go('home')">←</button>
+      <h2>Grafik pracy</h2>
+      <span class="topbar-icon">📅</span>
+    </div>
+    <div class="month-nav">
+      <button>‹</button><span>Czerwiec 2026</span><button>›</button>
+    </div>
+    <div style="overflow-y:auto;flex:1;">
+      <div class="day-row today" onclick="go('dzien-detail')">
+        <div class="day-date"><div class="dd">26</div><div class="dw">pt</div></div>
+        <div class="day-info">
+          <div class="day-shift">Zmiana I <span class="pill rano">RANO</span></div>
+          <div class="day-line" id="g-today-line">Linia 25, Bryg. 3 · Poj. 3040</div>
+        </div>
+        <div class="day-hours">05:00–13:00</div>
+      </div>
+      <div class="day-row">
+        <div class="day-date"><div class="dd">27</div><div class="dw">sb</div></div>
+        <div class="day-info"><div class="day-shift">Wolne <span class="pill wolne">WOLNE</span></div><div class="day-line">—</div></div>
+        <div class="day-hours" style="color:var(--muted)">—</div>
+      </div>
+      <div class="day-row">
+        <div class="day-date"><div class="dd">28</div><div class="dw">nd</div></div>
+        <div class="day-info"><div class="day-shift">Wolne <span class="pill wolne">WOLNE</span></div><div class="day-line">—</div></div>
+        <div class="day-hours" style="color:var(--muted)">—</div>
+      </div>
+      <div class="day-row" onclick="go('dzien-detail')">
+        <div class="day-date"><div class="dd">29</div><div class="dw">pn</div></div>
+        <div class="day-info">
+          <div class="day-shift">Zmiana II <span class="pill popo">PO POŁ.</span></div>
+          <div class="day-line" id="g-29-line">Linia 31, Bryg. 1 · Poj. 2103</div>
+        </div>
+        <div class="day-hours">13:00–21:00</div>
+      </div>
+      <div class="day-row" onclick="go('dzien-detail')">
+        <div class="day-date"><div class="dd">30</div><div class="dw">wt</div></div>
+        <div class="day-info">
+          <div class="day-shift">Zmiana III <span class="pill noc">NOC</span></div>
+          <div class="day-line">Linia 97, Bryg. 2 · Poj. 1991</div>
+        </div>
+        <div class="day-hours">21:00–05:00</div>
+      </div>
+      <div class="day-row" onclick="go('dzien-detail')">
+        <div class="day-date"><div class="dd">1</div><div class="dw">śr</div></div>
+        <div class="day-info">
+          <div class="day-shift">Zmiana I <span class="pill rano">RANO</span></div>
+          <div class="day-line" id="g-1-line">Linia 25, Bryg. 3 · Poj. 3040</div>
+        </div>
+        <div class="day-hours">05:00–13:00</div>
+      </div>
+      <div class="day-row" onclick="go('dzien-detail')">
+        <div class="day-date"><div class="dd">2</div><div class="dw">czw</div></div>
+        <div class="day-info">
+          <div class="day-shift">Zmiana I <span class="pill rano">RANO</span></div>
+          <div class="day-line">Linia 22, Bryg. 5 · Poj. 2055</div>
+        </div>
+        <div class="day-hours">05:30–13:30</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ DZIEŃ DETAIL ═══════════════════ -->
+  <div class="screen" id="screen-dzien-detail">
+    <div class="topbar">
+      <button class="topbar-back" onclick="go('grafik')">←</button>
+      <h2>Szczegóły zmiany</h2>
+    </div>
+    <div class="detail-body">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:15px;margin-bottom:15px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Piątek, 26 czerwca 2026</div>
+        <div style="font-size:21px;font-weight:700;">Zmiana I <span class="pill rano" style="font-size:11px;">RANO</span></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:18px;color:var(--accent);margin-top:4px;">05:00 – 13:00</div>
+      </div>
+      <div class="info-row"><span class="info-key">Nr służbowy</span><span class="info-value" style="font-family:'JetBrains Mono',monospace;" id="d-nr">2669</span></div>
+      <div class="info-row"><span class="info-key">Linia</span><span class="info-value" id="d-linia">🚌 25</span></div>
+      <div class="info-row"><span class="info-key">Brygada</span><span class="info-value" id="d-bryg">3</span></div>
+      <div class="info-row"><span class="info-key">Nr boczny pojazdu</span><span class="info-value" style="font-family:'JetBrains Mono',monospace;color:var(--accent);" id="d-pojazd">3040</span></div>
+      <div class="info-row"><span class="info-key">Zajezdnia</span><span class="info-value" id="d-depot">Depot Gdynia</span></div>
+      <div class="info-row"><span class="info-key">Dyspozytor</span><span class="info-value">K. Nowak</span></div>
+      <div class="info-row"><span class="info-key">Pierwsze odjazdy</span><span class="info-value" style="font-family:'JetBrains Mono',monospace;">05:12 · 05:44 · 06:18</span></div>
+      <div class="info-row"><span class="info-key">Przerwa</span><span class="info-value">09:00 – 09:30</span></div>
+      <button class="submit-btn" style="margin-top:18px;background:var(--accent2);" onclick="go('rozklady')">
+        🗺️ Otwórz rozkład linii
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ ROZKŁADY ═══════════════════ -->
+  <div class="screen" id="screen-rozklady">
+    <div class="topbar">
+      <button class="topbar-back" onclick="go('home')">←</button>
+      <h2>Rozkłady jazdy</h2>
+      <span class="topbar-icon">🗺️</span>
+    </div>
+    <div style="padding:10px 14px 6px;">
+      <input class="form-input" placeholder="🔍  Szukaj linii..." style="padding:9px 12px;">
+    </div>
+    <div style="overflow-y:auto;flex:1;padding-bottom:12px;">
+      <div class="route-card" onclick="toggleTT('tt1',this)">
+        <div class="route-header">
+          <div class="route-num">25</div>
+          <div class="route-info"><h3>Gdynia Dworzec → Orłowo</h3><p>32 przystanki · 48 min</p></div>
+          <span class="route-arrow">›</span>
+        </div>
+        <div class="timetable" id="tt1">
+          <div class="tt-row"><span class="tt-time">05:12</span><span class="tt-stop">Gdynia Dworzec</span><span class="tt-track">Peron 4</span></div>
+          <div class="tt-row"><span class="tt-time">05:19</span><span class="tt-stop">Kamienna Góra</span></div>
+          <div class="tt-row"><span class="tt-time">05:26</span><span class="tt-stop">Skwer Kościuszki</span></div>
+          <div class="tt-row"><span class="tt-time">05:33</span><span class="tt-stop">Redłowo</span></div>
+          <div class="tt-row"><span class="tt-time">06:00</span><span class="tt-stop">Orłowo Plaża</span><span class="tt-track">Końcowy</span></div>
+        </div>
+      </div>
+      <div class="route-card" onclick="toggleTT('tt2',this)">
+        <div class="route-header">
+          <div class="route-num">31</div>
+          <div class="route-info"><h3>Gdynia Wzgórze → Chylonia</h3><p>28 przystanków · 41 min</p></div>
+          <span class="route-arrow">›</span>
+        </div>
+        <div class="timetable" id="tt2">
+          <div class="tt-row"><span class="tt-time">13:00</span><span class="tt-stop">Gdynia Wzgórze</span><span class="tt-track">Peron 2</span></div>
+          <div class="tt-row"><span class="tt-time">13:09</span><span class="tt-stop">Śródmieście</span></div>
+          <div class="tt-row"><span class="tt-time">13:18</span><span class="tt-stop">Cisowa</span></div>
+          <div class="tt-row"><span class="tt-time">13:41</span><span class="tt-stop">Chylonia Pętla</span><span class="tt-track">Końcowy</span></div>
+        </div>
+      </div>
+      <div class="route-card" onclick="toggleTT('tt3',this)">
+        <div class="route-header">
+          <div class="route-num t">T22</div>
+          <div class="route-info"><h3>Grabówek → Witomino</h3><p>19 przystanków · 29 min</p></div>
+          <span class="route-arrow">›</span>
+        </div>
+        <div class="timetable" id="tt3">
+          <div class="tt-row"><span class="tt-time">05:30</span><span class="tt-stop">Grabówek Pętla</span><span class="tt-track">Tor 1</span></div>
+          <div class="tt-row"><span class="tt-time">05:38</span><span class="tt-stop">Plac Kaszubski</span></div>
+          <div class="tt-row"><span class="tt-time">05:45</span><span class="tt-stop">Wzgórze Św. Maksymiliana</span></div>
+          <div class="tt-row"><span class="tt-time">05:59</span><span class="tt-stop">Witomino Radiostacja</span><span class="tt-track">Końcowy</span></div>
+        </div>
+      </div>
+      <div class="route-card" onclick="toggleTT('tt4',this)">
+        <div class="route-header">
+          <div class="route-num" style="background:#059669;">97</div>
+          <div class="route-info"><h3>Gdynia Główna → Rumia</h3><p>41 przystanków · 62 min</p></div>
+          <span class="route-arrow">›</span>
+        </div>
+        <div class="timetable" id="tt4">
+          <div class="tt-row"><span class="tt-time">21:00</span><span class="tt-stop">Gdynia Główna</span><span class="tt-track">Peron 1</span></div>
+          <div class="tt-row"><span class="tt-time">21:15</span><span class="tt-stop">Dąbrowa</span></div>
+          <div class="tt-row"><span class="tt-time">21:38</span><span class="tt-stop">Wejherowo Skrzyżowanie</span></div>
+          <div class="tt-row"><span class="tt-time">22:02</span><span class="tt-stop">Rumia Centrum</span><span class="tt-track">Końcowy</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ USTERKI ═══════════════════ -->
+  <div class="screen" id="screen-usterki">
+    <div class="topbar">
+      <button class="topbar-back" onclick="go('home')">←</button>
+      <h2>Zgłoś usterkę</h2>
+      <span class="topbar-icon">🔧</span>
+    </div>
+    <div class="form-wrap">
+      <div>
+        <div class="form-label">Numer boczny pojazdu *</div>
+        <select class="form-select" id="f-pojazd">
+          <option>3040 · Solaris Urbino 18</option>
+          <option>2103 · MAN Lion's City</option>
+          <option>1991 · Solaris Trollino</option>
+          <option>2055 · Mercedes Citaro</option>
+          <option>1732 · Volvo 7900</option>
+        </select>
+      </div>
+      <div>
+        <div class="form-label">Kategoria usterki *</div>
+        <select class="form-select">
+          <option value="">— wybierz kategorię —</option>
+          <option selected>Drzwi — nie otwierają się / nie zamykają</option>
+          <option>Klimatyzacja — brak chłodzenia</option>
+          <option>Klimatyzacja — brak ogrzewania</option>
+          <option>Silnik / układ napędowy</option>
+          <option>Hamulce</option>
+          <option>Kasownik / czytnik kart</option>
+          <option>Wyświetlacz linii (zewnętrzny)</option>
+          <option>Tablica informacji pasażerskiej</option>
+          <option>Oświetlenie wnętrza</option>
+          <option>Uszkodzenie siedzenia</option>
+          <option>Zbita szyba</option>
+          <option>Inne</option>
+        </select>
+      </div>
+      <div>
+        <div class="form-label">Opis usterki (opcjonalnie)</div>
+        <textarea class="form-textarea" placeholder="Opisz dokładniej problem..."></textarea>
+      </div>
+      <div>
+        <div class="form-label">Lokalizacja zdarzenia</div>
+        <input class="form-input" placeholder="np. przystanek, trasa" value="Linia 25, przystanek Kamienna Góra">
+      </div>
+      <div class="photo-btn" onclick="alert('W wersji produkcyjnej: aparat telefonu')">📷 &nbsp;Dodaj zdjęcie</div>
+      <button class="submit-btn" onclick="sendUsterka()">📤 &nbsp;Wyślij zgłoszenie</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ HISTORIA ═══════════════════ -->
+  <div class="screen" id="screen-historia">
+    <div class="topbar">
+      <button class="topbar-back" onclick="go('home')">←</button>
+      <h2>Historia zgłoszeń</h2>
+      <span class="topbar-icon">📋</span>
+    </div>
+    <div style="padding:14px;overflow-y:auto;flex:1;">
+      <div class="usterka-item">
+        <div class="usterka-top">
+          <span class="usterka-vehicle">3040</span>
+          <span style="font-size:11px;color:var(--muted);">25.06.2026 · 14:32</span>
+          <span class="usterka-status nowa">NOWA</span>
+        </div>
+        <div class="usterka-desc">🚪 Drzwi — nie otwierają się</div>
+        <div class="usterka-meta" id="hist-meta1">Nr służb. 2669 · mail wysłany do mistrza</div>
+      </div>
+      <div class="usterka-item">
+        <div class="usterka-top">
+          <span class="usterka-vehicle">2103</span>
+          <span style="font-size:11px;color:var(--muted);">20.06.2026 · 08:15</span>
+          <span class="usterka-status woczek">W NAPRAWIE</span>
+        </div>
+        <div class="usterka-desc">❄️ Klimatyzacja — brak chłodzenia</div>
+        <div class="usterka-meta" id="hist-meta2">Nr służb. 2669 · przypisano Serwis Gdynia</div>
+      </div>
+      <div class="usterka-item">
+        <div class="usterka-top">
+          <span class="usterka-vehicle">1991</span>
+          <span style="font-size:11px;color:var(--muted);">12.06.2026 · 21:44</span>
+          <span class="usterka-status naprawiona">NAPRAWIONA</span>
+        </div>
+        <div class="usterka-desc">💡 Oświetlenie wnętrza — tylna sekcja</div>
+        <div class="usterka-meta">Naprawiono: 14.06.2026 · Warsztat Depot</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ TELEFONY ═══════════════════ -->
+  <div class="screen" id="screen-telefony">
+    <div class="topbar">
+      <button class="topbar-back" onclick="go('home')">←</button>
+      <h2>Telefony kontaktowe</h2>
+      <span class="topbar-icon">📞</span>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding-bottom:14px;">
+      <div class="contact-group">
+        <div class="contact-group-label">Dyżur / pilne</div>
+        <div class="contact-card">
+          <div class="contact-avatar orange">📡</div>
+          <div><div class="contact-name">Dyspozytor</div><div class="contact-role">Całą dobę · zmianowy</div></div>
+          <button class="contact-phone" onclick="callSim('58 621 10 00')">📞 Zadzwoń</button>
+        </div>
+        <div class="contact-card">
+          <div class="contact-avatar blue">🚦</div>
+          <div><div class="contact-name">Wydział Ruchu</div><div class="contact-role">Pn–Pt 6:00–22:00</div></div>
+          <button class="contact-phone" onclick="callSim('58 621 11 11')">📞 Zadzwoń</button>
+        </div>
+      </div>
+      <div class="contact-group">
+        <div class="contact-group-label">Serwis / technika</div>
+        <div class="contact-card">
+          <div class="contact-avatar green">🔧</div>
+          <div><div class="contact-name">Mistrz Warsztatu</div><div class="contact-role">Depot Gdynia Centrum</div></div>
+          <button class="contact-phone" onclick="callSim('58 621 22 33')">📞 Zadzwoń</button>
+        </div>
+        <div class="contact-card">
+          <div class="contact-avatar green">🛠️</div>
+          <div><div class="contact-name">Serwis Techniczny</div><div class="contact-role">Awarie i usterki</div></div>
+          <button class="contact-phone" onclick="callSim('58 621 22 55')">📞 Zadzwoń</button>
+        </div>
+      </div>
+      <div class="contact-group">
+        <div class="contact-group-label">Centrala</div>
+        <div class="contact-card">
+          <div class="contact-avatar purple">🏢</div>
+          <div><div class="contact-name">Sekretariat</div><div class="contact-role">Pn–Pt 7:00–15:00</div></div>
+          <button class="contact-phone" onclick="callSim('58 621 00 00')">📞 Zadzwoń</button>
+        </div>
+        <div class="contact-card">
+          <div class="contact-avatar purple">👔</div>
+          <div><div class="contact-name">Kadry i Płace</div><div class="contact-role">Pn–Pt 8:00–14:00</div></div>
+          <button class="contact-phone" onclick="callSim('58 621 00 22')">📞 Zadzwoń</button>
+        </div>
+        <div class="contact-card">
+          <div class="contact-avatar blue">🩺</div>
+          <div><div class="contact-name">Służba BHP</div><div class="contact-role">Wypadki, zdarzenia</div></div>
+          <button class="contact-phone" onclick="callSim('58 621 00 44')">📞 Zadzwoń</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ WYJAZDY (turystyka) ═══════════════════ -->
+  <div class="screen" id="screen-wyjazdy">
+    <div class="topbar">
+      <button class="topbar-back" onclick="go('home')">←</button>
+      <h2>Moje wyjazdy</h2>
+      <span class="topbar-icon">🧳</span>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding:12px 0;" id="wyjazdy-list"></div>
+  </div>
+
+  <!-- ═══════════════════ SZKOLENIA ═══════════════════ -->
+  <div class="screen" id="screen-szkolenia">
+    <div class="topbar">
+      <button class="topbar-back" onclick="go('home')">←</button>
+      <h2>Szkolenia</h2>
+      <span class="topbar-icon">🎓</span>
+    </div>
+    <div style="padding:14px 0 0;">
+      <div class="contact-group-label" style="padding:0 14px 8px;">Materiały szkoleniowe</div>
+    </div>
+    <div style="overflow-y:auto;flex:1;" id="szkolenia-list"></div>
+  </div>
+
+  <!-- ═══════════════════ SZCZEGÓŁ MATERIAŁU ═══════════════════ -->
+  <div class="screen" id="screen-material">
+    <div class="topbar">
+      <button class="topbar-back" onclick="go('szkolenia')">←</button>
+      <h2 id="material-tytul">—</h2>
+      <span class="topbar-icon">🎓</span>
+    </div>
+    <div class="detail-body" id="material-body"></div>
+  </div>
+
+  <!-- ═══════════════════ TEST ═══════════════════ -->
+  <div class="screen" id="screen-test">
+    <div class="topbar">
+      <button class="topbar-back" onclick="go('material')">←</button>
+      <h2 id="test-tytul">Test wiedzy</h2>
+      <span class="topbar-icon">📝</span>
+    </div>
+    <div style="overflow-y:auto;flex:1;padding-bottom:14px;" id="test-body"></div>
+  </div>
+
+  <!-- BOTTOM NAV (ukryty do zalogowania) -->
+  <div class="bottom-nav" id="bottom-nav" style="display:none;">
+    <button class="nav-item active" id="nav-home" onclick="go('home')">
+      <span class="nav-icon">🏠</span><span class="nav-label">Start</span>
+    </button>
+    <button class="nav-item" id="nav-grafik" onclick="goGrafikLubWyjazdy()">
+      <span class="nav-icon" id="nav-grafik-icon">📅</span><span class="nav-label" id="nav-grafik-label">Grafik</span>
+    </button>
+    <button class="nav-item" id="nav-usterki" onclick="go('usterki')">
+      <span class="nav-icon">🔧</span><span class="nav-label">Usterki</span>
+    </button>
+    <button class="nav-item" id="nav-telefony" onclick="go('telefony')">
+      <span class="nav-icon">📞</span><span class="nav-label">Telefony</span>
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── zegar ──
+  function updateClock(){
+    const n=new Date();
+    document.getElementById('clock').textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');
+  }
+  updateClock(); setInterval(updateClock,10000);
+
+  // ── baza kierowców (demo) ──
+  const DRIVERS = {
+    '2669':{ pin:'1234', name:'Marek Wiśniewski', wersja:'miejski', linia:'25/3', pojazd:'3040', zmiana:'Zmiana I · 05:00–13:00', depot:'Depot Gdynia' },
+    '1100':{ pin:'0000', name:'Anna Kowalska',    wersja:'miejski', linia:'31/1', pojazd:'2103', zmiana:'Zmiana II · 13:00–21:00', depot:'Depot Rumia' },
+    '3301':{ pin:'9999', name:'Tomasz Nowak',     wersja:'miejski', linia:'97/2', pojazd:'1991', zmiana:'Zmiana III · 21:00–05:00', depot:'Depot Gdynia' },
+    '9000':{ pin:'1234', name:'Konto Demo',       wersja:'turystyka', firma:'Nazwa firmy' },
+  };
+
+  // ── wyjazdy (demo, wersja turystyka) ──
+  const WYJAZDY_DEMO = [
+    { id:1, data:'2026-07-08', dzis:true,  cel:'Malbork — wycieczka szkolna', podstawienie:'06:30', wyjazd:'07:00', dojazd:'10:30', km:180, pojazd:'GD 12345 · Setra S 431 DT', pilot:'Anna Kowalczyk', pilotTel:'+48 600 100 200', info:'Grupa 45 osób, wyjazd spod szkoły', zakonczony:false },
+    { id:2, data:'2026-07-09', dzis:false, cel:'Praga — wycieczka wielodniowa (dzień 1)', podstawienie:'04:30', wyjazd:'05:00', dojazd:'13:00', km:620, pojazd:'GD 98765 · Mercedes Tourismo', pilot:'Marek Zieliński', pilotTel:'+48 600 300 400', info:'Przekroczenie granicy — wymagane dokumenty pojazdu', zakonczony:false },
+    { id:3, data:'2026-07-15', dzis:false, cel:'Trójmiasto — objazd po zabytkach', podstawienie:'07:45', wyjazd:'08:00', dojazd:'08:30', km:45, pojazd:'GD 12345 · Setra S 431 DT', pilot:'Ewa Nowicka', pilotTel:'+48 600 500 600', info:null, zakonczony:false },
+  ];
+  const tankowaniaDemo = {}; // { wyjazdId: [{litry,koszt}] }
+
+  // ── szkolenia (demo) ──
+  const SZKOLENIA_DEMO = [
+    { id:'ekojazda-artykul', typ:'artykul', tytul:'Zasady ekojazdy', opis:'Jak jeździć oszczędnie i płynnie — podstawy ekojazdy dla kierowców autobusów.', testId:'test-ekojazda',
+      tresc:'Ekojazda to styl prowadzenia pojazdu ograniczający zużycie paliwa i emisję spalin. Kluczowe zasady: płynne ruszanie bez gwałtownego przyspieszania, wcześniejsze przewidywanie sytuacji na drodze, jazda na możliwie najwyższym biegu przy niskich obrotach silnika oraz unikanie zbędnej pracy silnika na postoju.' },
+    { id:'ekojazda-wideo', typ:'wideo', tytul:'Ekojazda — film instruktażowy', opis:'Praktyczne wskazówki jazdy ekonomicznej w formie wideo — uzupełnienie artykułu o zasadach ekojazdy.', testId:null,
+      wideoUrl:'https://www.youtube.com/embed/7zLVqXAVO0g' },
+  ];
+  const TEST_DEMO = {
+    'test-ekojazda': { tytul:'Test: Zasady ekojazdy', pytania:[
+      { tresc:'Który styl jazdy jest zgodny z zasadami ekojazdy?', odpowiedzi:[
+        { tresc:'Płynne ruszanie i przewidywanie sytuacji na drodze', ok:true },
+        { tresc:'Gwałtowne przyspieszanie i hamowanie', ok:false } ] },
+      { tresc:'Czy warto zostawiać silnik włączony na długim postoju?', odpowiedzi:[
+        { tresc:'Tak, zawsze', ok:false },
+        { tresc:'Nie, warto wyłączać silnik na dłuższym postoju', ok:true } ] },
+    ] }
+  };
+  let ukonczoneMaterialy = new Set();
+
+  // ── PIN ──
+  let pinVal='';
+  function pp(d){ if(pinVal.length>=4)return; pinVal+=d; dots(); checkReady(); }
+  function pd(){ pinVal=pinVal.slice(0,-1); dots(); checkReady(); }
+  function dots(){ for(let i=0;i<4;i++) document.getElementById('pd'+i).classList.toggle('filled',i<pinVal.length); }
+  function checkReady(){
+    const nr=document.getElementById('inp-nr').value.trim();
+    document.getElementById('btn-login').disabled=!(nr.length>=4 && pinVal.length===4);
+  }
+
+  // ── logowanie ──
+  let aktualnaWersja = 'miejski';
+  function doLogin(){
+    const nr=document.getElementById('inp-nr').value.trim();
+    const err=document.getElementById('login-err');
+    const d=DRIVERS[nr];
+    if(d && d.pin===pinVal){
+      err.classList.remove('show');
+      aktualnaWersja = d.wersja;
+      document.getElementById('h-name').textContent = d.name + (d.firma ? '' : '');
+      document.getElementById('h-nr').textContent   = nr;
+
+      if(d.wersja === 'turystyka'){
+        document.getElementById('grid-miejski').style.display='none';
+        document.getElementById('grid-turystyka').style.display='grid';
+        document.getElementById('nav-grafik-icon').textContent='🧳';
+        document.getElementById('nav-grafik-label').textContent='Wyjazdy';
+        const najblizszy = WYJAZDY_DEMO.find(w=>!w.zakonczony) || WYJAZDY_DEMO[0];
+        document.getElementById('h-linia-label').textContent='Cel podróży';
+        document.getElementById('h-linia').textContent=najblizszy.cel;
+        document.getElementById('h-linia-sub').textContent='najbliższy wyjazd';
+        document.getElementById('h-pojazd-label').textContent='Nr rejestracyjny';
+        document.getElementById('h-pojazd').textContent=najblizszy.pojazd.split(' · ')[0];
+        document.getElementById('h-zmiana').textContent='Wyjazd '+najblizszy.wyjazd+' · podstawienie '+najblizszy.podstawienie;
+        document.getElementById('h-depot').textContent=d.firma || '';
+        renderWyjazdy();
+      } else {
+        document.getElementById('grid-miejski').style.display='grid';
+        document.getElementById('grid-turystyka').style.display='none';
+        document.getElementById('nav-grafik-icon').textContent='📅';
+        document.getElementById('nav-grafik-label').textContent='Grafik';
+        const [lNr,bryg]=d.linia.split('/');
+        document.getElementById('h-linia-label').textContent='Linia / Brygada';
+        document.getElementById('h-linia').textContent  = d.linia;
+        document.getElementById('h-linia-sub').textContent='dziś';
+        document.getElementById('h-pojazd-label').textContent='Nr boczny';
+        document.getElementById('h-pojazd').textContent = d.pojazd;
+        document.getElementById('h-zmiana').textContent = d.zmiana;
+        document.getElementById('h-depot').textContent  = d.depot;
+        document.getElementById('d-nr').textContent     = nr;
+        document.getElementById('d-linia').textContent  = '🚌 '+lNr;
+        document.getElementById('d-bryg').textContent   = bryg;
+        document.getElementById('d-pojazd').textContent = d.pojazd;
+        document.getElementById('d-depot').textContent  = d.depot;
+        const gLine = 'Linia '+lNr+', Bryg. '+bryg+' · Poj. '+d.pojazd;
+        ['g-today-line','g-1-line'].forEach(id=>{ const el=document.getElementById(id); if(el)el.textContent=gLine; });
+        const sel=document.getElementById('f-pojazd');
+        for(let i=0;i<sel.options.length;i++){ if(sel.options[i].text.startsWith(d.pojazd)){ sel.selectedIndex=i; break; } }
+        ['hist-meta1','hist-meta2'].forEach(id=>{ const el=document.getElementById(id); if(el)el.textContent=el.textContent.replace(/Nr służb\. \d+/,'Nr służb. '+nr); });
+      }
+
+      renderSzkolenia();
+      document.getElementById('bottom-nav').style.display='flex';
+      go('home');
+    } else {
+      err.classList.add('show');
+      pinVal=''; dots(); checkReady();
+    }
+  }
+
+  function goGrafikLubWyjazdy(){ go(aktualnaWersja==='turystyka' ? 'wyjazdy' : 'grafik'); }
+
+  // ── wyjazdy (turystyka) ──
+  function renderWyjazdy(){
+    const dzisiajStr = '2026-07-08';
+    const wrap = document.getElementById('wyjazdy-list');
+    wrap.innerHTML = WYJAZDY_DEMO.map(w=>{
+      const czyDzis = w.data===dzisiajStr;
+      let akcje;
+      if(w.zakonczony){
+        akcje = '<div class="status-done">✅ Wyjazd zakończony'+(w.zaliczka!=null?' · zaliczka '+w.zaliczka+' zł':'')+'</div>';
+      } else {
+        const tank = tankowaniaDemo[w.id]||[];
+        akcje = '<div class="info-card-actions">'
+          +'<div class="form-label">Pobrana zaliczka (zł)</div>'
+          +'<div class="mini-row"><input class="mini-input" type="number" id="zaliczka-'+w.id+'" placeholder="np. 500"><button class="small-btn" onclick="zapiszZaliczkeDemo('+w.id+')">Zapisz</button></div>'
+          +'<div class="form-label">Tankowania</div>'
+          +'<div id="tankowania-'+w.id+'">'+tank.map(t=>'<div class="tankowanie-item">'+t.litry+' l · '+t.koszt+' zł</div>').join('')+'</div>'
+          +'<div class="mini-row" style="margin-top:8px;"><input class="mini-input" type="number" id="litry-'+w.id+'" placeholder="Litry"><input class="mini-input" type="number" id="koszt-'+w.id+'" placeholder="Koszt zł"><button class="small-btn" onclick="dodajTankowanieDemo('+w.id+')">Dodaj</button></div>'
+          +'<button class="finish-btn" onclick="zakonczWyjazdDemo('+w.id+')">🏁 Zakończ wyjazd</button>'
+          +'</div>';
+      }
+      return '<div class="info-card'+(czyDzis?' today':'')+'">'
+        +'<div class="info-row"><span class="info-key">Data</span><span class="info-value">'+w.data.split('-').reverse().join('.')+(czyDzis?' · dziś':'')+'</span></div>'
+        +'<div class="info-row"><span class="info-key">Cel podróży</span><span class="info-value">'+w.cel+'</span></div>'
+        +'<div class="info-row"><span class="info-key">Podstawienie / wyjazd</span><span class="info-value">'+w.podstawienie+' / '+w.wyjazd+'</span></div>'
+        +'<div class="info-row"><span class="info-key">Dojazd na miejsce</span><span class="info-value">'+w.dojazd+'</span></div>'
+        +'<div class="info-row"><span class="info-key">Kilometry</span><span class="info-value">'+w.km+' km</span></div>'
+        +'<div class="info-row"><span class="info-key">Pojazd</span><span class="info-value">'+w.pojazd+'</span></div>'
+        +'<div class="info-row"><span class="info-key">Pilot grupy</span><span class="info-value">'+w.pilot+' · <a href="tel:'+w.pilotTel+'" style="color:var(--accent2)">'+w.pilotTel+'</a></span></div>'
+        +(w.info?'<div class="info-row"><span class="info-key">Dodatkowe info</span><span class="info-value">'+w.info+'</span></div>':'')
+        +akcje
+        +'</div>';
+    }).join('');
+  }
+  function zapiszZaliczkeDemo(id){
+    const val = document.getElementById('zaliczka-'+id).value;
+    const w = WYJAZDY_DEMO.find(x=>x.id===id);
+    w.zaliczka = val ? parseFloat(val) : null;
+    toast('✅ Zaliczka zapisana');
+  }
+  function dodajTankowanieDemo(id){
+    const litry = document.getElementById('litry-'+id).value;
+    const koszt = document.getElementById('koszt-'+id).value;
+    if(!litry || !koszt){ toast('⚠️ Podaj litry i koszt','#f97316'); return; }
+    if(!tankowaniaDemo[id]) tankowaniaDemo[id]=[];
+    tankowaniaDemo[id].push({litry,koszt});
+    toast('✅ Tankowanie dodane');
+    renderWyjazdy();
+  }
+  function zakonczWyjazdDemo(id){
+    if(!confirm('Zakończyć wyjazd i wysłać podsumowanie do biura?')) return;
+    const w = WYJAZDY_DEMO.find(x=>x.id===id);
+    w.zakonczony = true;
+    toast('✅ Wyjazd zakończony, mail wysłany do biura (symulacja)');
+    renderWyjazdy();
+  }
+
+  // ── szkolenia ──
+  function renderSzkolenia(){
+    const wrap = document.getElementById('szkolenia-list');
+    wrap.innerHTML = SZKOLENIA_DEMO.map(m=>{
+      const ikona = m.typ==='wideo' ? '🎬' : '📚';
+      const ukonczone = ukonczoneMaterialy.has(m.id) ? '<span class="tag-new" style="background:rgba(34,197,94,.2);color:#86efac;">✓ ukończone</span>' : '';
+      return '<div class="material-item" onclick="openMaterial(\''+m.id+'\')"><h3><span class="material-icon">'+ikona+'</span>'+m.tytul+ukonczone+'</h3><p>'+m.opis+'</p></div>';
+    }).join('');
+  }
+  function openMaterial(id){
+    const m = SZKOLENIA_DEMO.find(x=>x.id===id);
+    document.getElementById('material-tytul').textContent = m.tytul;
+    let html = '';
+    if(m.typ==='wideo'){
+      html += '<div class="video-wrap"><iframe src="'+m.wideoUrl+'" allowfullscreen></iframe></div>';
+    } else {
+      html += '<p style="font-size:14px;line-height:1.6;color:var(--text);">'+m.tresc+'</p>';
+    }
+    html += '<button class="submit-btn" style="margin-top:18px;" onclick="oznaczUkonczone(\''+m.id+'\')">Oznacz jako ukończone</button>';
+    if(m.testId) html += '<button class="submit-btn" style="margin-top:10px;background:var(--accent2);" onclick="openTest(\''+m.testId+'\')">📝 Rozwiąż test: '+TEST_DEMO[m.testId].tytul.replace('Test: ','')+'</button>';
+    document.getElementById('material-body').innerHTML = html;
+    go('material');
+  }
+  function oznaczUkonczone(id){ ukonczoneMaterialy.add(id); toast('✅ Oznaczono jako ukończone'); renderSzkolenia(); }
+
+  let testWybory = {};
+  function openTest(testId){
+    const t = TEST_DEMO[testId];
+    document.getElementById('test-tytul').textContent = t.tytul;
+    testWybory = {};
+    document.getElementById('test-body').innerHTML = t.pytania.map((p,pi)=>{
+      const opts = p.odpowiedzi.map((o,oi)=>'<button class="quiz-option" id="opt-'+pi+'-'+oi+'" onclick="wybierzOdpowiedz('+pi+','+oi+')">'+o.tresc+'</button>').join('');
+      return '<div class="quiz-question">'+(pi+1)+'. '+p.tresc+'</div>'+opts;
+    }).join('') + '<div style="padding:0 14px;"><button class="submit-btn" onclick="sprawdzTest(\''+testId+'\')">Sprawdź wynik</button></div><div id="quiz-wynik"></div>';
+    go('test');
+  }
+  function wybierzOdpowiedz(pi,oi){
+    testWybory[pi]=oi;
+    document.querySelectorAll('[id^="opt-'+pi+'-"]').forEach(el=>el.classList.remove('picked'));
+    document.getElementById('opt-'+pi+'-'+oi).classList.add('picked');
+  }
+  function sprawdzTest(testId){
+    const t = TEST_DEMO[testId];
+    let poprawne=0;
+    t.pytania.forEach((p,pi)=>{
+      p.odpowiedzi.forEach((o,oi)=>{
+        const el=document.getElementById('opt-'+pi+'-'+oi);
+        if(o.ok) el.classList.add('correct');
+        else if(testWybory[pi]===oi) el.classList.add('wrong');
+      });
+      if(testWybory[pi]!==undefined && p.odpowiedzi[testWybory[pi]].ok) poprawne++;
+    });
+    const wynikProcent = Math.round(100*poprawne/t.pytania.length);
+    document.getElementById('quiz-wynik').innerHTML = '<div class="quiz-result">Wynik: '+poprawne+'/'+t.pytania.length+' ('+wynikProcent+'%) '+(wynikProcent>=50?'✅ Zaliczony':'❌ Niezaliczony')+'</div>';
+  }
+
+  function doLogout(){
+    pinVal=''; dots();
+    document.getElementById('inp-nr').value='';
+    document.getElementById('btn-login').disabled=true;
+    document.getElementById('login-err').classList.remove('show');
+    document.getElementById('bottom-nav').style.display='none';
+    document.getElementById('grid-miejski').style.display='grid';
+    document.getElementById('grid-turystyka').style.display='none';
+    document.getElementById('nav-grafik-icon').textContent='📅';
+    document.getElementById('nav-grafik-label').textContent='Grafik';
+    go('login');
+  }
+
+  // ── nawigacja ──
+  const navScreens=['home','grafik','usterki','telefony'];
+  function go(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-'+id).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    const map={'dzien-detail':'grafik','rozklady':'home','historia':'home','wyjazdy':'grafik','szkolenia':'home','material':'home','test':'home'};
+    const navId=navScreens.includes(id)?id:(map[id]||'home');
+    const el=document.getElementById('nav-'+navId);
+    if(el)el.classList.add('active');
+    const sc=document.getElementById('screen-'+id);
+    if(sc)sc.scrollTop=0;
+  }
+
+  function toggleTT(id,card){
+    const tt=document.getElementById(id);
+    tt.classList.toggle('open');
+    card.querySelector('.route-arrow').textContent=tt.classList.contains('open')?'↓':'›';
+  }
+  function toast(msg,color){
+    const t=document.getElementById('toast');
+    t.textContent=msg; t.style.background=color||'var(--green)';
+    t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+  }
+  function sendUsterka(){ toast('✅ Zgłoszenie wysłane! E-mail do mistrza dostarczony.'); setTimeout(()=>go('historia'),1200); }
+  function callSim(nr){ toast('📞 Dzwonię: '+nr,'var(--accent2)'); }
+</script>
+</body>
+</html>

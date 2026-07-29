@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="pl">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>AppKierowca — aplikacja dla kierowców i firm transportowych</title>
+  <meta name="description" content="AppKierowca to trzy wersje aplikacji dla kierowców — autobusów miejskich, turystyki i autokarów liniowych — plus wspólny moduł szkoleniowy z filmami, materiałami i testami. Wypróbuj demo lub umów prezentację dla swojej firmy." />
+  <meta name="keywords" content="aplikacja dla kierowców, aplikacja dla firm transportowych, grafik pracy kierowców, asystent tachografu, aplikacja dla kierowców autobusów, aplikacja dla przewoźników, zarządzanie flotą kierowców, moduł szkoleniowy dla kierowców, szkolenia kierowców online" />
+  <meta name="author" content="AppKierowca" />
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+  <link rel="canonical" href="https://appkierowca.pl/" />
+  <link rel="icon" type="image/svg+xml" href="img/favicon.svg" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://appkierowca.pl/" />
+  <meta property="og:title" content="AppKierowca — aplikacja dla kierowców i firm transportowych" />
+  <meta property="og:description" content="Trzy wersje aplikacji — miejska, turystyczna i liniowa — plus wspólny moduł szkoleniowy z filmami i testami dla kierowców." />
+  <meta property="og:locale" content="pl_PL" />
+  <meta property="og:site_name" content="AppKierowca" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AppKierowca",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Web, Android, iOS",
+    "description": "Trzy wersje aplikacji dla kierowców — autobusów miejskich, turystyki i autokarów liniowych — z modułem szkoleniowym (filmy, materiały, testy) wspólnym dla wszystkich wersji.",
+    "url": "https://appkierowca.pl"
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<body>
+
+  <!-- ═══ NAVBAR ═══ -->
+  <header class="navbar">
+    <div class="container">
+      <a href="#" class="logo">
+        <span class="logo-mark">🚌</span>
+        AppKierowca
+      </a>
+      <nav class="nav-links" id="navLinks">
+        <a href="#wersje">Wersje</a>
+        <a href="#szkolenia">Szkolenia</a>
+        <a href="#demo">Demo</a>
+        <a href="#kontakt">Kontakt</a>
+        <a href="#demo" class="btn btn-outline nav-only-mobile">Wypróbuj demo</a>
+        <a href="#kontakt" class="btn btn-accent nav-only-mobile">Umów prezentację</a>
+      </nav>
+      <div class="nav-cta">
+        <a href="#demo" class="btn btn-outline">Wypróbuj demo</a>
+        <a href="#kontakt" class="btn btn-accent">Umów prezentację</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <div class="badge"><span class="dot"></span> Dla kierowców i firm transportowych</div>
+        <h1>Grafik, usterki i asystent tachografu <span class="gradient-text">w jednej aplikacji</span> dla Twojej floty</h1>
+        <p class="lead">AppKierowca porządkuje codzienną pracę kierowców autobusów miejskich, turystyki i przewozów dalekobieżnych — bez papierowych grafików i zgłoszeń usterek przez telefon.</p>
+        <div class="hero-actions">
+          <a href="#demo" class="btn btn-primary">Wypróbuj demo</a>
+          <a href="#kontakt" class="btn btn-outline">Umów prezentację dla firmy</a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><b>3</b><span>wersje: miejska, turystyka, liniowa</span></div>
+          <div class="stat"><b>4</b><span>elementy modułu szkoleniowego</span></div>
+          <div class="stat"><b>561/2006</b><span>limity czasu jazdy UE</span></div>
+        </div>
+      </div>
+
+      <div class="phone-mockup reveal">
+        <div class="app-card">
+          <h4>Grafik pracy</h4>
+          <div class="bar"><span style="width:80%"></span></div>
+          <div class="bar"><span style="width:55%"></span></div>
+          <span class="app-status">Zmiana jutro 6:00</span>
+        </div>
+        <div class="app-card">
+          <h4>Asystent tachografu</h4>
+          <div class="bar"><span style="width:64%"></span></div>
+          <span class="app-status warn">Przerwa za 40 min</span>
+        </div>
+        <div class="app-card">
+          <h4>Zgłoszenia usterek</h4>
+          <div class="bar"><span style="width:30%"></span></div>
+          <div class="bar"><span style="width:70%"></span></div>
+          <span class="app-status">2 zgłoszenia w toku</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PROBLEMY ═══ -->
+  <section class="section section-alt">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">Problem</div>
+        <h2>Koniec z grafikiem na kartce</h2>
+        <p>Codzienna organizacja pracy kierowców rozjeżdża się między telefonami, kartkami i grupami na komunikatorach.</p>
+      </div>
+      <div class="problems-grid">
+        <div class="problem-card reveal">
+          <div class="icon">📋</div>
+          <h3>Grafiki w kilku miejscach naraz</h3>
+          <p>Zmiany zmieniają się w ostatniej chwili, a kierowca dowiaduje się o tym przypadkiem albo wcale.</p>
+        </div>
+        <div class="problem-card reveal">
+          <div class="icon">🔧</div>
+          <h3>Usterki zgłaszane przez telefon</h3>
+          <p>Zgłoszenie ginie w rozmowie, nikt nie wie, czy usterka została naprawiona i kiedy.</p>
+        </div>
+        <div class="problem-card reveal">
+          <div class="icon">⏱️</div>
+          <h3>Ręczne liczenie czasu jazdy</h3>
+          <p>Limity jazdy i odpoczynku z rozporządzenia 561/2006 kierowca pilnuje sam, w głowie.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ WERSJE (TRZY APLIKACJE W JEDNYM BRANDINGU) ═══ -->
+  <section class="section" id="wersje">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">Trzy aplikacje w jednym brandingu</div>
+        <h2>Jedna marka, trzy wersje dopasowane do rodzaju przewozów</h2>
+        <p>AppKierowca dzieli się na trzy odrębne moduły — każdy kierowca dostaje wersję dopasowaną do specyfiki swojej pracy.</p>
+      </div>
+
+      <div class="version-tabs reveal" role="tablist">
+        <button class="version-tab active" data-version="miejski" role="tab" aria-selected="true">🚍 Autobusy miejskie</button>
+        <button class="version-tab" data-version="turystyka" role="tab" aria-selected="false">🧳 Autobusy turystyczne</button>
+        <button class="version-tab" data-version="liniowe" role="tab" aria-selected="false">🎫 Autokary liniowe (przewozy dalekobieżne, linie regularne)</button>
+      </div>
+
+      <div class="version-panels">
+        <div class="version-panel active" data-version="miejski">
+          <p class="version-intro">Dynamika pracy w aglomeracji i ścisłe trzymanie się lokalnych rozkładów jazdy.</p>
+          <div class="features-grid">
+            <div class="feature-card reveal">
+              <div class="icon">📅</div>
+              <h3>Grafik i harmonogram pracy</h3>
+              <p>Podgląd przypisanych zmian, godzin rozpoczęcia i zakończenia pracy oraz informacji o zmiennikach.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">🚌</div>
+              <h3>Przydział pojazdu</h3>
+              <p>Numer boczny autobusu przypisanego do kierowcy na dany dzień operacyjny.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">🗺️</div>
+              <h3>Trasy i rozkłady jazdy</h3>
+              <p>Nawigacja po trasie danej linii z czasami odjazdów z przystanków oraz opóźnieniami w czasie rzeczywistym.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">🛠️</div>
+              <h3>Zgłaszanie usterek</h3>
+              <p>Szybkie raportowanie problemów technicznych — zdjęcie, opis i priorytet usterki dla warsztatu.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">📻</div>
+              <h3>Komunikacja z dyspozytornią</h3>
+              <p>Szybka wymiana komunikatów z centralą — kolizje, zatory drogowe, prośby o podmianę wozu.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="version-panel" data-version="turystyka">
+          <p class="version-intro">Elastyczność, logistyka długodystansowa i komfort współpracy z pilotem wycieczki.</p>
+          <div class="features-grid">
+            <div class="feature-card reveal">
+              <div class="icon">🚏</div>
+              <h3>Nawigacja dla pojazdów wielkogabarytowych</h3>
+              <p>Mapy z ograniczeniami tonażowymi, wysokościami wiaduktów i zakazami wjazdu dla autokarów.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">🗓️</div>
+              <h3>Harmonogram wycieczki i punkty postojowe</h3>
+              <p>Plan dnia z miejscami docelowymi, bezpiecznymi parkingami i miejscami wysadzania grup.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">📍</div>
+              <h3>Baza logistyki turystycznej</h3>
+              <p>Punkty obsługi turystycznej, sugerowane trasy objazdowe i dedykowane parkingi przy głównych atrakcjach.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">🧾</div>
+              <h3>Zarządzanie kosztami w trasie</h3>
+              <p>Skanowanie i zapisywanie paragonów oraz faktur — paliwo, opłaty drogowe, parkingi — do rozliczenia delegacji.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">🧑‍✈️</div>
+              <h3>Współpraca z pilotem</h3>
+              <p>Lista pasażerów, informacje o zbiórkach i współdzielenie lokalizacji autokaru z pilotem grupy.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">🛠️</div>
+              <h3>Zgłaszanie usterek</h3>
+              <p>Standardowy formularz raportowania awarii z opcją wezwania pomocy drogowej lub mobilnego serwisu za granicą.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="version-panel" data-version="liniowe">
+          <p class="version-intro">Ścisła kontrola biletów, pilnowanie czasu pracy i obsługa pasażerów na dworcach.</p>
+          <div class="features-grid">
+            <div class="feature-card reveal">
+              <div class="icon">🎫</div>
+              <h3>Skaner biletów i odprawa pasażerów</h3>
+              <p>Wbudowany czytnik kodów QR/kreskowych do weryfikacji biletów oraz cyfrowa lista pasażerów (manifest).</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">🚏</div>
+              <h3>Trasy i perony</h3>
+              <p>Numery peronów na dworcach przesiadkowych oraz szacowany czas przyjazdu (ETA).</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">⏱️</div>
+              <h3>Asystent tachografu</h3>
+              <span class="tag">Nowość</span>
+              <p>Samodzielne liczenie dopuszczalnego czasu jazdy, z przypomnieniem o obowiązkowych przerwach — w przyszłości jako inteligentny bot.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">🛠️</div>
+              <h3>Zgłaszanie usterek</h3>
+              <p>Raportowanie awarii z naciskiem na szybkie powiadomienie centrali o konieczności podstawienia pojazdu zastępczego.</p>
+            </div>
+            <div class="feature-card reveal">
+              <div class="icon">🧳</div>
+              <h3>Zarządzanie lukiem bagażowym</h3>
+              <p>System oparty na tagach — kontrola liczby nadanych bagaży i ochrona przed pomyłkami na przystankach pośrednich.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ MODUŁ SZKOLENIOWY ═══ -->
+  <section class="section section-alt" id="szkolenia">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">Wspólne dla wszystkich wersji</div>
+        <h2>Moduł szkoleniowy</h2>
+        <p>Podnoszenie kwalifikacji, onboarding nowych kierowców i weryfikacja wiedzy — w jednym miejscu, niezależnie od wybranej wersji aplikacji.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="icon">📚</div>
+          <h3>Baza wiedzy i instrukcje</h3>
+          <p>Cyfrowe podręczniki obsługi poszczególnych modeli autobusów, procedury awaryjne oraz instrukcje obsługi kasy fiskalnej i tachografu.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon">🎬</div>
+          <h3>Materiały wideo</h3>
+          <p>Odtwarzacz z filmami instruktażowymi — np. jak prawidłowo zabezpieczyć wózek inwalidzki czy zasady ekojazdy. Firma dodaje własne filmy z panelu administracyjnego.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon">📝</div>
+          <h3>Testy i quizy</h3>
+          <p>Krótkie testy sprawdzające wiedzę po zapoznaniu się z materiałem szkoleniowym, z automatycznym ocenianiem wyników.</p>
+        </div>
+        <div class="feature-card reveal">
+          <div class="icon">🏅</div>
+          <h3>Certyfikaty i śledzenie postępów</h3>
+          <p>Indywidualny profil kierowcy z historią ukończonych szkoleń i przypomnieniami o zbliżających się terminach odnowienia uprawnień, np. badań lekarskich.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ DEMO ═══ -->
+  <section class="section" id="demo">
+    <div class="container">
+      <div class="section-header reveal">
+        <div class="section-label">Jak to działa</div>
+        <h2>Wersja testowa w 3 prostych krokach</h2>
+        <p>Bez instalowania czegokolwiek i bez skomplikowanych ustawień — dostajesz gotowe logowanie do wersji dopasowanej do Twojej floty.</p>
+      </div>
+
+      <div class="steps-grid reveal">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Piszesz, jaką masz flotę</h3>
+          <p>Miejska, turystyczna czy dalekobieżna — wypełniasz formularz poniżej albo piszesz maila.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Dostajesz login i hasło</h3>
+          <p>W ciągu 24 godzin przygotowujemy dostęp do wersji dopasowanej do Twojej firmy. Nic nie musisz instalować.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Testujesz miesiąc za darmo</h3>
+          <p>Otwierasz link na telefonie w przeglądarce, logujesz się i sprawdzasz aplikację z kierowcami przez 30 dni, bez zobowiązań.</p>
+        </div>
+      </div>
+
+      <div class="demo-box reveal">
+        <h2>Zobacz ogólną wersję demo już teraz</h2>
+        <p>Chcesz najpierw zerknąć bez czekania? Wypróbuj przykładowe demo — pokazuje ogólne możliwości aplikacji, jeszcze niedopasowane do konkretnej floty.</p>
+        <div class="demo-actions">
+          <a href="https://appkierowca.protvdo.pl" target="_blank" rel="noopener" class="btn btn-primary">Wypróbuj demo ogólne</a>
+          <a href="#kontakt" class="btn btn-outline">Umów wersję dla mojej floty</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ KONTAKT ═══ -->
+  <section class="section section-alt" id="kontakt">
+    <div class="container contact-grid">
+      <div class="contact-info reveal">
+        <h2>Wdrożymy AppKierowca w Twojej firmie</h2>
+        <p>Napisz do nas albo zostaw wiadomość — odpowiadamy w 24 godziny i pokażemy, jak AppKierowca wygląda przy Twojej flocie.</p>
+        <ul class="contact-list">
+          <li><span class="icon">✉️</span> kontakt@appkierowca.pl</li>
+          <li><span class="icon">📱</span> +48 784 195 290</li>
+          <li><span class="icon">📍</span> Gdynia, Polska</li>
+        </ul>
+      </div>
+      <form class="contact-form reveal" id="contactForm">
+        <label for="name">Imię i nazwisko</label>
+        <input type="text" id="name" name="name" placeholder="Jan Kowalski" required />
+        <label for="company">Firma</label>
+        <input type="text" id="company" name="company" placeholder="Nazwa firmy transportowej" />
+        <label for="email">E-mail</label>
+        <input type="email" id="email" name="email" placeholder="jan@firma.pl" required />
+        <label for="message">Wiadomość</label>
+        <textarea id="message" name="message" placeholder="Ilu kierowców, jaki rodzaj przewozów..."></textarea>
+        <button type="submit" class="btn btn-accent">Wyślij zapytanie</button>
+        <div id="formStatus" class="form-status"></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer>
+    <div class="container footer-row">
+      <p>© 2026 AppKierowca. Wszystkie prawa zastrzeżone.</p>
+      <div class="footer-links">
+        <a href="#wersje">Wersje</a>
+        <a href="#szkolenia">Szkolenia</a>
+        <a href="#kontakt">Kontakt</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
