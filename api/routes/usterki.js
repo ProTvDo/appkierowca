@@ -1,20 +1,10 @@
 const express    = require('express');
 const db         = require('../db');
 const authMW     = require('../middleware/auth');
-const nodemailer = require('nodemailer');
 const { adresatFirmy } = require('../lib/adresaci');
+const { transporter, nadawca } = require('../lib/poczta');
 
 const router = express.Router();
-
-const transporter = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST   || 'smtp.gmail.com',
-  port:   parseInt(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  }
-});
 
 // ── GET /api/usterki ─────────────────────────────────────
 // Historia usterek zalogowanego kierowcy
@@ -59,6 +49,25 @@ router.post('/', authMW, async (req, res) => {
 
   let usterka;
   try {
+    // Identyfikatory przychodzą z żądania, więc muszą zostać sprawdzone pod kątem
+    // firmy — inaczej kierowca mógłby zgłosić usterkę na pojazd innego przewoźnika,
+    // a zgłoszenie trafiłoby do serwisu jego własnej firmy z obcym numerem bocznym.
+    const { rows: pojazdRows } = await db.query(
+      'SELECT id FROM pojazdy WHERE id = $1 AND firma_id = $2',
+      [pojazd_id, req.kierowca.firma_id]
+    );
+    if (!pojazdRows[0]) {
+      return res.status(400).json({ error: 'Nie znaleziono pojazdu' });
+    }
+
+    const { rows: katRows } = await db.query(
+      'SELECT id FROM kategorie_usterek WHERE id = $1 AND (firma_id IS NULL OR firma_id = $2)',
+      [kategoria_id, req.kierowca.firma_id]
+    );
+    if (!katRows[0]) {
+      return res.status(400).json({ error: 'Nie znaleziono kategorii usterki' });
+    }
+
     const { rows: usterkiRows } = await db.query(
       `INSERT INTO usterki (kierowca_id, pojazd_id, kategoria_id, opis, lokalizacja, status)
        VALUES ($1, $2, $3, $4, $5, 'nowa')
@@ -97,7 +106,7 @@ router.post('/', authMW, async (req, res) => {
       const kat = usterka.kategorie_usterek;
 
       await transporter.sendMail({
-        from:    `"KierowcaApp" <${process.env.SMTP_USER}>`,
+        from:    nadawca(),
         to:      emailTo,
         subject: `🔧 Nowa usterka — pojazd ${p.nr_boczny} — ${kat.nazwa}`,
         html: `

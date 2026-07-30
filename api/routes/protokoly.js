@@ -7,17 +7,10 @@
 const express    = require('express');
 const db         = require('../db');
 const authMW     = require('../middleware/auth');
-const nodemailer = require('nodemailer');
 const { adresatFirmy } = require('../lib/adresaci');
+const { transporter, nadawca } = require('../lib/poczta');
 
 const router = express.Router();
-
-const transporter = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST || 'smtp.gmail.com',
-  port:   parseInt(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-});
 
 const PUNKTY = [
   ['swiatla',          'Światła'],
@@ -126,7 +119,7 @@ router.post('/', authMW, async (req, res) => {
 
       try {
         await transporter.sendMail({
-          from: `"KierowcaApp" <${process.env.SMTP_USER}>`,
+          from: nadawca(),
           to:   emailTo,
           subject: `⚠️ Protokół ${rodzaj === 'odbior' ? 'odbioru' : 'zdania'} z uwagami — ${wyjazd.nr_rejestracyjny || 'pojazd'} (${wyjazd.cel_podrozy})`,
           html: `

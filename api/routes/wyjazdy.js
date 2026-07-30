@@ -1,21 +1,10 @@
 const express    = require('express');
 const db         = require('../db');
 const authMW     = require('../middleware/auth');
-const nodemailer = require('nodemailer');
 const { adresatFirmy } = require('../lib/adresaci');
+const { transporter, nadawca } = require('../lib/poczta');
 
 const router = express.Router();
-
-// Konfiguracja e-mail — ten sam wzorzec co w routes/usterki.js
-const transporter = nodemailer.createTransport({
-  host:   process.env.SMTP_HOST   || 'smtp.gmail.com',
-  port:   parseInt(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  }
-});
 
 const POLA = `id, data, cel_podrozy, godz_wyjazdu, godz_podstawienia, godz_dojazdu, kilometry,
   pilot_imie_nazwisko, pilot_telefon, nr_rejestracyjny, marka_model, nr_boczny, dodatkowe_info,
@@ -174,7 +163,7 @@ router.post('/:id/zakoncz', authMW, async (req, res) => {
         .join('');
 
       await transporter.sendMail({
-        from:    `"KierowcaApp" <${process.env.SMTP_USER}>`,
+        from:    nadawca(),
         to:      emailTo,
         subject: `🧳 Podsumowanie wyjazdu — ${wyjazd.cel_podrozy} (${wyjazd.kierowcy?.imie} ${wyjazd.kierowcy?.nazwisko})`,
         html: `
