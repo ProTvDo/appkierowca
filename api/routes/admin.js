@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt  = require('bcryptjs');
 const db      = require('../db');
 const authMW  = require('../middleware/auth');
 
@@ -22,6 +23,47 @@ router.get('/kierowcy', authMW, wymagajAdmina, async (req, res) => {
       [req.kierowca.firma_id]
     );
     res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── GET /api/admin/kierowcy/lista ─────────────────────────
+// Pełna lista do zarządzania kontami — inaczej niż /kierowcy, która służy
+// tylko do listy rozwijanej przy przypisywaniu wyjazdu i pomija nieaktywnych.
+router.get('/kierowcy/lista', authMW, wymagajAdmina, async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT id, imie, nazwisko, nr_sluzbowy, wersja, rola, aktywny
+         FROM kierowcy
+        WHERE firma_id = $1
+        ORDER BY rola DESC, nazwisko, imie`,
+      [req.kierowca.firma_id]
+    );
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ── POST /api/admin/kierowcy/:id/reset-pin ────────────────
+// Kierowca zgubił PIN. Starego nie da się odczytać — w bazie jest tylko jego
+// skrót — więc nadajemy nowy i pokazujemy go raz.
+router.post('/kierowcy/:id/reset-pin', authMW, wymagajAdmina, async (req, res) => {
+  try {
+    const pin = String(Math.floor(1000 + Math.random() * 9000));
+
+    // Warunek na firmę jest tu istotny: bez niego dyspozytor mógłby podmienić
+    // PIN kierowcy innej firmy, zgadując identyfikator.
+    const { rows } = await db.query(
+      `UPDATE kierowcy SET pin_hash = $1
+        WHERE id = $2 AND firma_id = $3
+        RETURNING imie, nazwisko, nr_sluzbowy`,
+      [await bcrypt.hash(pin, 10), req.params.id, req.kierowca.firma_id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Nie ma takiego kierowcy w tej firmie' });
+
+    res.json({ ...rows[0], pin });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

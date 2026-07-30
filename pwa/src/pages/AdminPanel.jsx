@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import api from '../api'
 import Toast from '../components/Toast'
 import ImportDanych from './ImportDanych'
+import KierowcyPanel from './KierowcyPanel'
 
 export default function AdminPanel({ kierowca, onLogout }) {
   const [zakladka, setZakladka]  = useState('wyjazd')
@@ -72,9 +73,12 @@ export default function AdminPanel({ kierowca, onLogout }) {
                 onClick={() => setZakladka('wyjazd')}>Przypisz wyjazd</button>
         <button className={zakladka === 'import' ? 'zakladka aktywna' : 'zakladka'}
                 onClick={() => setZakladka('import')}>Wgraj dane</button>
+        <button className={zakladka === 'kierowcy' ? 'zakladka aktywna' : 'zakladka'}
+                onClick={() => setZakladka('kierowcy')}>Kierowcy</button>
       </div>
 
       {zakladka === 'import' && <ImportDanych />}
+      {zakladka === 'kierowcy' && <KierowcyPanel />}
 
       <div className="form-wrap" style={{ display: zakladka === 'wyjazd' ? undefined : 'none' }}>
         <div>

@@ -11,6 +11,7 @@ import SzkolenieDetal from './pages/SzkolenieDetal'
 import Test from './pages/Test'
 import AdminPanel from './pages/AdminPanel'
 import FirmyPanel from './pages/FirmyPanel'
+import ZmianaPin from './pages/ZmianaPin'
 import BottomNav from './components/BottomNav'
 import './App.css'
 
@@ -101,6 +102,7 @@ export default function App() {
         {strona === 'szkolenia' && <Szkolenia goTo={setStrona} setWybranyMaterialId={setWybranyMaterialId} />}
         {strona === 'szkolenie-detal' && <SzkolenieDetal materialId={wybranyMaterialId} goTo={setStrona} setWybranyTestId={setWybranyTestId} />}
         {strona === 'test' && <Test testId={wybranyTestId} goTo={setStrona} />}
+        {strona === 'pin' && <ZmianaPin goTo={setStrona} />}
       </div>
       <BottomNav aktywna={strona} goTo={setStrona} wersja={kierowca.wersja} />
     </div>

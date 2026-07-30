@@ -43,7 +43,10 @@ export default function Home({ kierowca, token, onLogout, goTo }) {
             <div className="hero-name">{kierowca.imie} {kierowca.nazwisko}</div>
             {kierowca.firma && <div className="hero-firma">{kierowca.firma}</div>}
           </div>
-          <button className="hero-logout" onClick={onLogout}>Wyloguj ↩</button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+            <button className="hero-logout" onClick={onLogout}>Wyloguj ↩</button>
+            <button className="hero-logout" onClick={() => goTo('pin')}>Zmień PIN 🔒</button>
+          </div>
         </div>
 
         <div className="hero-card">
