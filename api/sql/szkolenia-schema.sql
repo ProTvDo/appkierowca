@@ -1,4 +1,4 @@
--- Moduł szkoleniowy — uruchom raz w Supabase SQL Editor (Dashboard → SQL Editor)
+-- Moduł szkoleniowy. Uruchom raz: psql -d kierowcaapp -f szkolenia-schema.sql
 
 create table if not exists materialy_szkoleniowe (
   id             bigint generated always as identity primary key,

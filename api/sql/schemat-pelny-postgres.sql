@@ -1,4 +1,4 @@
--- Pełny schemat KierowcaApp dla zwykłego PostgreSQL (odtworzenie ze schematu Supabase)
+-- Pełny schemat KierowcaApp dla PostgreSQL — baza do postawienia aplikacji od zera.
 
 create table kierowcy (
   id            bigint generated always as identity primary key,

@@ -152,4 +152,23 @@ router.get('/kategorie', authMW, async (req, res) => {
   }
 });
 
+// ── GET /api/usterki/pojazdy ─────────────────────────────
+// Pojazdy firmy do wyboru przy zgłoszeniu. Kierowca nie ma uprawnień do
+// /api/admin/pojazdy, a wcześniej ekran usterek miał listę wpisaną na sztywno
+// — kierowca innej firmy widział obce autokary i nie mógł niczego zgłosić.
+router.get('/pojazdy', authMW, async (req, res) => {
+  try {
+    const { rows } = await db.query(
+      `SELECT id, nr_boczny, nr_rejestracyjny, marka, model
+         FROM pojazdy
+        WHERE firma_id = $1 AND coalesce(aktywny, true) = true
+        ORDER BY nr_boczny NULLS LAST, nr_rejestracyjny`,
+      [req.kierowca.firma_id]
+    );
+    res.json(rows);
+  } catch (e) {
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
+  }
+});
+
 module.exports = router;

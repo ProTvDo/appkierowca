@@ -1,4 +1,4 @@
--- Panel dyspozytora + rozliczenie wyjazdu — uruchom raz w Supabase SQL Editor
+-- Panel dyspozytora + rozliczenie wyjazdu. Uruchom raz: psql -d kierowcaapp -f panel-i-rozliczenie-schema.sql
 
 alter table kierowcy
   add column if not exists rola text not null default 'kierowca'

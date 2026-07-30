@@ -1,4 +1,4 @@
--- Wersja "turystyka" — uruchom raz w Supabase SQL Editor (Dashboard → SQL Editor)
+-- Wersja "turystyka". Uruchom raz: psql -d kierowcaapp -f wyjazdy-turystyczne-schema.sql
 
 alter table kierowcy
   add column if not exists wersja text not null default 'miejski'

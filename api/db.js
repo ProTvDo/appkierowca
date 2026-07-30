@@ -1,8 +1,8 @@
 const { Pool, types } = require('pg');
 
-// DATE i TIME jako surowe stringi (nie obiekty Date) — unika przesunięć o dzień
-// wynikających z konwersji stref czasowych, i zachowuje ten sam format co poprzednio
-// zwracał Supabase (np. "2026-07-08").
+// DATE i TIME jako surowe stringi, nie obiekty Date — konwersja stref czasowych
+// potrafi przesunąć datę o dzień, a grafik i data wyjazdu muszą pozostać
+// dokładnie tym, co wpisała firma (np. "2026-08-01").
 types.setTypeParser(1082, val => val); // date
 types.setTypeParser(1083, val => val); // time
 

@@ -13,16 +13,10 @@ export default function Usterki({ token, kierowca, goTo }) {
   const [toast, setToast]           = useState('')
 
   useEffect(() => {
-    // pobierz pojazdy i kategorie
-    api.get('/usterki/kategorie').then(r => setKategorie(r.data))
-    // pojazdy z Supabase bezpośrednio przez API — tymczasowo statyczne
-    setPojazdy([
-      { id: 1, nr_boczny: '3040', marka: 'Solaris', model: 'Urbino 18' },
-      { id: 2, nr_boczny: '2103', marka: 'MAN', model: "Lion's City" },
-      { id: 3, nr_boczny: '1991', marka: 'Solaris', model: 'Trollino' },
-      { id: 4, nr_boczny: '2055', marka: 'Mercedes', model: 'Citaro' },
-      { id: 5, nr_boczny: '1732', marka: 'Volvo', model: '7900' },
-    ])
+    api.get('/usterki/kategorie').then(r => setKategorie(r.data)).catch(() => setKategorie([]))
+    // Pojazdy pobieramy z bazy firmy. Wcześniej lista była wpisana na sztywno
+    // i pokazywała autokary zupełnie innej firmy.
+    api.get('/usterki/pojazdy').then(r => setPojazdy(r.data || [])).catch(() => setPojazdy([]))
   }, [])
 
   function showToast(msg, color) {
@@ -63,15 +57,23 @@ export default function Usterki({ token, kierowca, goTo }) {
 
       <div className="form-wrap">
         <div>
-          <div className="form-label">Numer boczny pojazdu *</div>
+          <div className="form-label">Pojazd *</div>
           <select className="form-select" value={pojazd} onChange={e => setPojazd(e.target.value)}>
             <option value="">— wybierz pojazd —</option>
             {pojazdy.map(p => (
               <option key={p.id} value={p.id}>
-                {p.nr_boczny} · {p.marka} {p.model}
+                {/* Firmy turystyczne rozpoznają autokary po rejestracji, miejskie
+                    po numerze bocznym — pokazujemy to, co firma wpisała. */}
+                {[p.nr_boczny, p.nr_rejestracyjny].filter(Boolean).join(' · ')}
+                {(p.marka || p.model) && ` · ${[p.marka, p.model].filter(Boolean).join(' ')}`}
               </option>
             ))}
           </select>
+          {pojazdy.length === 0 && (
+            <div className="form-label" style={{ marginTop: 6, color: 'var(--accent)' }}>
+              Firma nie wgrała jeszcze pojazdów — zgłoś to dyspozytorowi.
+            </div>
+          )}
         </div>
 
         <div>
