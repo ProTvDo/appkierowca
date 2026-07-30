@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
 import api from '../api'
 
+// Rozkłady jazdy nie mają jeszcze ekranu ani tabel w bazie — kafelek prowadził
+// w pustkę (App.jsx nie zna strony 'rozklady'). Ukryty do czasu zbudowania
+// ekranu; wzór układu jest w demo/index.html (sekcja ROZKŁADY).
+// Żeby przywrócić kafelek, ustaw na true i dodaj gałąź strona === 'rozklady'.
+const ROZKLADY_GOTOWE = false
+
 export default function Home({ kierowca, token, onLogout, goTo }) {
   const czyTurystyka = kierowca.wersja === 'turystyka'
   const [dzisiaj, setDzisiaj] = useState(null)
@@ -71,7 +77,7 @@ export default function Home({ kierowca, token, onLogout, goTo }) {
           <div className="tile-label">{czyTurystyka ? 'Moje wyjazdy' : 'Grafik pracy'}</div>
           <div className="tile-sub">{czyTurystyka ? 'Wyjazdy z grupą' : 'Twój harmonogram'}</div>
         </div>
-        {!czyTurystyka && (
+        {!czyTurystyka && ROZKLADY_GOTOWE && (
           <div className="tile" onClick={() => goTo('rozklady')}>
             <div className="tile-icon">🗺️</div>
             <div className="tile-label">Rozkłady jazdy</div>

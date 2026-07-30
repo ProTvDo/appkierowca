@@ -2,6 +2,7 @@ const express    = require('express');
 const db         = require('../db');
 const authMW     = require('../middleware/auth');
 const nodemailer = require('nodemailer');
+const { adresatFirmy } = require('../lib/adresaci');
 
 const router = express.Router();
 
@@ -162,9 +163,10 @@ router.post('/:id/zakoncz', authMW, async (req, res) => {
   let emailWyslany = false;
   let emailBlad = null;
 
-  const emailTo = process.env.EMAIL_BIURO || process.env.SMTP_USER;
-  if (!emailTo || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    emailBlad = 'Poczta nie jest skonfigurowana';
+  // Adresat należy do firmy kierowcy — nie jest wspólny dla całej aplikacji.
+  const { adres: emailTo, powod } = await adresatFirmy(req.kierowca.firma_id, 'biuro');
+  if (!emailTo) {
+    emailBlad = powod;
   } else {
     try {
       const wierszeTankowan = tankowania

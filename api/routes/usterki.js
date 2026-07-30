@@ -2,6 +2,7 @@ const express    = require('express');
 const db         = require('../db');
 const authMW     = require('../middleware/auth');
 const nodemailer = require('nodemailer');
+const { adresatFirmy } = require('../lib/adresaci');
 
 const router = express.Router();
 
@@ -87,9 +88,9 @@ router.post('/', authMW, async (req, res) => {
     return res.status(500).json({ error: e.message });
   }
 
-  // Wyślij e-mail do mistrza
-  const emailTo = process.env.EMAIL_MISTRZ || process.env.SMTP_USER;
-  if (emailTo && process.env.SMTP_USER) {
+  // Zgłoszenie idzie do serwisu tej firmy, a nie na wspólny adres aplikacji.
+  const { adres: emailTo } = await adresatFirmy(req.kierowca.firma_id, 'serwis');
+  if (emailTo) {
     try {
       const k = usterka.kierowcy;
       const p = usterka.pojazdy;

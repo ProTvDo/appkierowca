@@ -37,6 +37,7 @@ router.get('/', authMW, wymagajSuperadmina, async (req, res) => {
     const { rows } = await db.query(
       `SELECT f.id, f.nazwa, f.kod, f.wersja, f.trial_do, f.aktywna,
               f.kontakt_osoba, f.kontakt_email, f.kontakt_telefon, f.notatki,
+              f.email_biuro, f.email_serwis,
               (f.trial_do IS NOT NULL AND f.trial_do < current_date) AS trial_wygasl,
               (f.trial_do - current_date)                            AS dni_do_konca,
               count(k.id) FILTER (WHERE k.rola = 'kierowca')          AS kierowcow
@@ -56,7 +57,8 @@ router.get('/', authMW, wymagajSuperadmina, async (req, res) => {
 // Zakłada firmę i od razu konto dyspozytora — bez tego firma nie miałaby
 // jak wejść do aplikacji i wgrać swoich danych.
 router.post('/', authMW, wymagajSuperadmina, async (req, res) => {
-  const { nazwa, kod, wersja, dni_trialu, kontakt_osoba, kontakt_email, kontakt_telefon, notatki } = req.body;
+  const { nazwa, kod, wersja, dni_trialu, kontakt_osoba, kontakt_email, kontakt_telefon,
+          notatki, email_biuro, email_serwis } = req.body;
 
   if (!nazwa || !nazwa.trim()) return res.status(400).json({ error: 'Podaj nazwę firmy' });
   if (!['miejski', 'turystyka', 'liniowe'].includes(wersja)) {
@@ -75,11 +77,16 @@ router.post('/', authMW, wymagajSuperadmina, async (req, res) => {
 
   try {
     const { rows } = await db.query(
-      `INSERT INTO firmy (nazwa, kod, wersja, trial_do, kontakt_osoba, kontakt_email, kontakt_telefon, notatki)
-       VALUES ($1, $2, $3, CASE WHEN $4::int > 0 THEN current_date + $4::int ELSE NULL END, $5, $6, $7, $8)
-       RETURNING id, nazwa, kod, wersja, trial_do`,
+      `INSERT INTO firmy (nazwa, kod, wersja, trial_do, kontakt_osoba, kontakt_email,
+                          kontakt_telefon, notatki, email_biuro, email_serwis)
+       VALUES ($1, $2, $3, CASE WHEN $4::int > 0 THEN current_date + $4::int ELSE NULL END,
+               $5, $6, $7, $8, $9, $10)
+       RETURNING id, nazwa, kod, wersja, trial_do, email_biuro, email_serwis`,
       [nazwa.trim(), kodFinalny, wersja, dni, kontakt_osoba || null, kontakt_email || null,
-       kontakt_telefon || null, notatki || null]
+       kontakt_telefon || null, notatki || null,
+       // Gdy podano tylko jeden adres, biuro dziedziczy adres kontaktowy —
+       // firma z jedną skrzynką nie musi wpisywać go dwa razy.
+       (email_biuro || kontakt_email || null), (email_serwis || null)]
     );
     const firma = rows[0];
 
@@ -107,7 +114,7 @@ router.post('/', authMW, wymagajSuperadmina, async (req, res) => {
 // ── PATCH /api/firmy/:id ──────────────────────────────────
 // Body: { trial_do? | przedluz_o_dni?, aktywna?, notatki? }
 router.patch('/:id', authMW, wymagajSuperadmina, async (req, res) => {
-  const { trial_do, przedluz_o_dni, aktywna, notatki } = req.body;
+  const { trial_do, przedluz_o_dni, aktywna, notatki, email_biuro, email_serwis } = req.body;
 
   try {
     const { rows: istnieje } = await db.query('SELECT id, trial_do FROM firmy WHERE id = $1', [req.params.id]);
@@ -132,9 +139,19 @@ router.patch('/:id', authMW, wymagajSuperadmina, async (req, res) => {
     if (notatki !== undefined) {
       await db.query('UPDATE firmy SET notatki = $1 WHERE id = $2', [notatki, req.params.id]);
     }
+    // Puste pole znaczy "usuń adres", więc zapisujemy null, nie pusty tekst —
+    // inaczej zastępowanie w lib/adresaci.js uznałoby go za ustawiony.
+    if (email_biuro !== undefined) {
+      await db.query('UPDATE firmy SET email_biuro = $1 WHERE id = $2',
+                     [email_biuro?.trim() || null, req.params.id]);
+    }
+    if (email_serwis !== undefined) {
+      await db.query('UPDATE firmy SET email_serwis = $1 WHERE id = $2',
+                     [email_serwis?.trim() || null, req.params.id]);
+    }
 
     const { rows } = await db.query(
-      `SELECT id, nazwa, kod, wersja, trial_do, aktywna, notatki,
+      `SELECT id, nazwa, kod, wersja, trial_do, aktywna, notatki, email_biuro, email_serwis,
               (trial_do - current_date) AS dni_do_konca
          FROM firmy WHERE id = $1`,
       [req.params.id]

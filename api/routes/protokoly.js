@@ -8,6 +8,7 @@ const express    = require('express');
 const db         = require('../db');
 const authMW     = require('../middleware/auth');
 const nodemailer = require('nodemailer');
+const { adresatFirmy } = require('../lib/adresaci');
 
 const router = express.Router();
 
@@ -113,14 +114,20 @@ router.post('/', authMW, async (req, res) => {
     const protokol = rows[0];
     let emailWyslany = false;
 
-    if (!wszystkoOk && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    // Powiadamiamy tylko przy uwagach — mail o każdym poprawnym protokole
+    // przestałby być czytany, a wtedy ginęłyby też te istotne.
+    const { adres: emailTo } = wszystkoOk
+      ? { adres: null }
+      : await adresatFirmy(req.kierowca.firma_id, 'biuro');
+
+    if (emailTo) {
       const braki = PUNKTY.filter(([k]) => wartosci[k] !== true)
         .map(([k, etykieta]) => `${etykieta}: ${wartosci[k] === false ? 'usterka' : 'nie sprawdzono'}`);
 
       try {
         await transporter.sendMail({
           from: `"KierowcaApp" <${process.env.SMTP_USER}>`,
-          to:   process.env.EMAIL_BIURO || process.env.SMTP_USER,
+          to:   emailTo,
           subject: `⚠️ Protokół ${rodzaj === 'odbior' ? 'odbioru' : 'zdania'} z uwagami — ${wyjazd.nr_rejestracyjny || 'pojazd'} (${wyjazd.cel_podrozy})`,
           html: `
             <h2>Protokół ${rodzaj === 'odbior' ? 'odbioru pojazdu' : 'zdania pojazdu'} z uwagami</h2>

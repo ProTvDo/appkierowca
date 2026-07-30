@@ -14,10 +14,13 @@ export default function FirmyPanel({ onLogout }) {
   const [zajety, setZajety] = useState(false)
   const [pokazFormularz, setPokazFormularz] = useState(false)
 
-  const [form, setForm] = useState({
+  const PUSTA = {
     nazwa: '', kod: '', wersja: 'miejski', dni_trialu: 30,
     kontakt_osoba: '', kontakt_email: '', kontakt_telefon: '',
-  })
+    email_biuro: '', email_serwis: '',
+  }
+  const [form, setForm] = useState(PUSTA)
+  const [edycja, setEdycja] = useState(null)   // { id, email_biuro, email_serwis }
 
   function wczytaj() {
     api.get('/firmy').then(r => setFirmy(r.data || [])).catch(() => setFirmy([]))
@@ -31,8 +34,7 @@ export default function FirmyPanel({ onLogout }) {
       const r = await api.post('/firmy', form)
       setNowa(r.data)
       setPokazFormularz(false)
-      setForm({ nazwa: '', kod: '', wersja: 'miejski', dni_trialu: 30,
-                kontakt_osoba: '', kontakt_email: '', kontakt_telefon: '' })
+      setForm(PUSTA)
       wczytaj()
     } catch (e) {
       setBlad(e.response?.data?.error || 'Nie udało się założyć firmy')
@@ -48,6 +50,15 @@ export default function FirmyPanel({ onLogout }) {
 
   async function przelaczAktywna(f) {
     await api.patch(`/firmy/${f.id}`, { aktywna: !f.aktywna })
+    wczytaj()
+  }
+
+  async function zapiszAdresy() {
+    await api.patch(`/firmy/${edycja.id}`, {
+      email_biuro:  edycja.email_biuro,
+      email_serwis: edycja.email_serwis,
+    })
+    setEdycja(null)
     wczytaj()
   }
 
@@ -139,6 +150,26 @@ export default function FirmyPanel({ onLogout }) {
                      onChange={e => setForm(f => ({ ...f, kontakt_telefon: e.target.value }))} />
             </div>
 
+            <div>
+              <div className="form-label">E-mail biura</div>
+              <input className="form-input" type="email" placeholder="biuro@firma.pl"
+                     value={form.email_biuro}
+                     onChange={e => setForm(f => ({ ...f, email_biuro: e.target.value }))} />
+              <div className="form-label" style={{ marginTop: 6, opacity: 0.75 }}>
+                Tu trafiają podsumowania zakończonych wyjazdów i protokoły z uwagami
+              </div>
+            </div>
+
+            <div>
+              <div className="form-label">E-mail serwisu</div>
+              <input className="form-input" type="email" placeholder="(gdy puste — na adres biura)"
+                     value={form.email_serwis}
+                     onChange={e => setForm(f => ({ ...f, email_serwis: e.target.value }))} />
+              <div className="form-label" style={{ marginTop: 6, opacity: 0.75 }}>
+                Zgłoszenia usterek. Wypełnij, jeśli firma ma osobny warsztat
+              </div>
+            </div>
+
             {blad && <div className="login-error">{blad}</div>}
 
             <button className="btn-primary" onClick={zaloz} disabled={zajety}>
@@ -165,13 +196,40 @@ export default function FirmyPanel({ onLogout }) {
                   {f.kontakt_osoba && <> · {f.kontakt_osoba}</>}
                   {f.kontakt_telefon && <> · {f.kontakt_telefon}</>}
                 </div>
-                <div className="firma-akcje">
-                  <button className="btn-maly" onClick={() => przedluz(f.id, 30)}>+30 dni</button>
-                  <button className="btn-maly" onClick={() => przedluz(f.id, 90)}>+90 dni</button>
-                  <button className="btn-maly" onClick={() => przelaczAktywna(f)}>
-                    {f.aktywna ? 'Zablokuj' : 'Odblokuj'}
-                  </button>
+
+                {/* Brak adresu biura znaczy, że powiadomienia tej firmy nie mają
+                    gdzie iść — musi to być widoczne, a nie ukryte w edycji. */}
+                <div className="firma-szczegoly">
+                  {f.email_biuro
+                    ? <>📧 biuro: {f.email_biuro}{f.email_serwis && <> · serwis: {f.email_serwis}</>}</>
+                    : <span style={{ color: 'var(--accent)' }}>⚠️ brak adresu biura — powiadomienia nie wyjdą</span>}
                 </div>
+
+                {edycja?.id === f.id ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+                    <input className="form-input" type="email" placeholder="e-mail biura"
+                           value={edycja.email_biuro}
+                           onChange={e => setEdycja(x => ({ ...x, email_biuro: e.target.value }))} />
+                    <input className="form-input" type="email" placeholder="e-mail serwisu (opcjonalnie)"
+                           value={edycja.email_serwis}
+                           onChange={e => setEdycja(x => ({ ...x, email_serwis: e.target.value }))} />
+                    <div className="firma-akcje">
+                      <button className="btn-maly zrobiony" onClick={zapiszAdresy}>Zapisz</button>
+                      <button className="btn-maly" onClick={() => setEdycja(null)}>Anuluj</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="firma-akcje">
+                    <button className="btn-maly" onClick={() => przedluz(f.id, 30)}>+30 dni</button>
+                    <button className="btn-maly" onClick={() => przedluz(f.id, 90)}>+90 dni</button>
+                    <button className="btn-maly" onClick={() => setEdycja({
+                      id: f.id, email_biuro: f.email_biuro || '', email_serwis: f.email_serwis || '',
+                    })}>Adresy e-mail</button>
+                    <button className="btn-maly" onClick={() => przelaczAktywna(f)}>
+                      {f.aktywna ? 'Zablokuj' : 'Odblokuj'}
+                    </button>
+                  </div>
+                )}
               </div>
             )
           })}
