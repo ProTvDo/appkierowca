@@ -496,3 +496,30 @@ html, body, #root {
 
 .firma-szczegoly { font-size: 13px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
 .firma-akcje { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── PROTOKÓŁ ZDAWCZO-ODBIORCZY ── */
+.protokol-skroty { display: flex; flex-direction: column; gap: 8px; }
+.protokol-skroty .btn-maly { text-align: left; }
+.btn-maly.zrobiony   { border-color: var(--green);  color: var(--green); }
+.btn-maly.z-uwagami  { border-color: var(--accent); color: var(--accent); }
+
+.protokol-lista {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.protokol-punkt {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; padding: 11px 13px;
+  border-bottom: 1px solid var(--border);
+}
+.protokol-punkt:last-child { border-bottom: none; }
+.protokol-nazwa { font-size: 14px; color: var(--text); flex: 1; }
+.protokol-wybor { display: flex; gap: 6px; flex-shrink: 0; }
+.protokol-btn {
+  background: var(--surface); color: var(--muted);
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 7px 13px; font-size: 13px; font-weight: 700; cursor: pointer;
+  min-width: 62px;
+}
+.protokol-btn.ok  { background: var(--green); border-color: var(--green); color: #04220f; }
+.protokol-btn.zle { background: var(--red);   border-color: var(--red);   color: #fff; }

@@ -16,7 +16,10 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const POLA = 'id, data, cel_podrozy, godz_wyjazdu, godz_podstawienia, godz_dojazdu, kilometry, pilot_imie_nazwisko, pilot_telefon, nr_rejestracyjny, marka_model, nr_boczny, dodatkowe_info, zaliczka, zakonczony';
+const POLA = `id, data, cel_podrozy, godz_wyjazdu, godz_podstawienia, godz_dojazdu, kilometry,
+  pilot_imie_nazwisko, pilot_telefon, nr_rejestracyjny, marka_model, nr_boczny, dodatkowe_info,
+  zaliczka, zakonczony, punkty_postojowe, nocleg, wyzywienie, oplaty_drogowe, winiety_oplacone,
+  ograniczenia_trasy, wielkosc_grupy`;
 
 // ── GET /api/wyjazdy ──────────────────────────────────────
 // Lista wyjazdów zalogowanego kierowcy, najbliższe na górze
@@ -153,8 +156,16 @@ router.post('/:id/zakoncz', authMW, async (req, res) => {
   const sumaLitrow = tankowania.reduce((s, t) => s + Number(t.litry), 0);
   const sumaKosztow = tankowania.reduce((s, t) => s + Number(t.koszt), 0);
 
+  // Kierowca musi wiedzieć, czy biuro naprawdę dostało podsumowanie. Bez tego
+  // aplikacja pokazywała "mail wysłany do biura" także wtedy, gdy poczta nie
+  // była skonfigurowana i nic nie wychodziło.
+  let emailWyslany = false;
+  let emailBlad = null;
+
   const emailTo = process.env.EMAIL_BIURO || process.env.SMTP_USER;
-  if (emailTo && process.env.SMTP_USER) {
+  if (!emailTo || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    emailBlad = 'Poczta nie jest skonfigurowana';
+  } else {
     try {
       const wierszeTankowan = tankowania
         .map(t => `<tr><td style="padding:4px 12px">${new Date(t.created_at).toLocaleString('pl-PL')}</td><td style="padding:4px 12px">${t.litry} l</td><td style="padding:4px 12px">${t.koszt} zł</td></tr>`)
@@ -185,13 +196,20 @@ router.post('/:id/zakoncz', authMW, async (req, res) => {
           </table>
         `
       });
+      emailWyslany = true;
     } catch (emailErr) {
       console.error('Błąd wysyłki e-mail z podsumowaniem wyjazdu:', emailErr.message);
+      emailBlad = emailErr.message;
       // nie przerywamy — wyjazd i tak jest oznaczony jako zakończony
     }
   }
 
-  res.json({ ok: true, wyjazd, tankowania, suma_litrow: sumaLitrow, suma_kosztow: sumaKosztow });
+  res.json({
+    ok: true, wyjazd, tankowania,
+    suma_litrow: sumaLitrow, suma_kosztow: sumaKosztow,
+    email_wyslany: emailWyslany,
+    email_blad: emailBlad,
+  });
 });
 
 module.exports = router;

@@ -14,16 +14,28 @@ async function odczytajPlik(plik) {
   }
 }
 
+// Kolejność jest kolejnością wgrywania: wyjazdy potrzebują kierowców i pojazdów,
+// grafik potrzebuje kierowców. Dlatego kierowcy są pierwsi.
 const RODZAJE = {
   kierowcy: {
-    tytul: 'Lista kierowców',
+    tytul: '1. Kierowcy',
     opis: 'Imię, nazwisko, numer służbowy i segment. Numer możesz zostawić pusty — nadamy kolejny wolny.',
-    plik: '1_dane_firmy_i_kierowcy.csv',
+  },
+  pojazdy: {
+    tytul: '2. Autokary i pojazdy',
+    opis: 'Numer rejestracyjny, marka, model i liczba miejsc. Liczba miejsc pozwala sprawdzić, czy autokar pomieści grupę.',
+  },
+  kontakty: {
+    tytul: '3. Kontakty',
+    opis: 'Numery, które kierowca ma pod ręką w trasie — biuro, dyspozytor, serwis mobilny.',
+  },
+  wyjazdy: {
+    tytul: '4. Zlecenia turystyczne',
+    opis: 'Wyjazdy z pełną kartą zlecenia. Wgraj najpierw kierowców i pojazdy, żeby dało się je dopasować.',
   },
   grafik: {
-    tytul: 'Grafik miesięczny',
-    opis: 'Dni pracy i wolne dla każdego kierowcy. Najpierw wgraj listę kierowców.',
-    plik: '2_grafik_miejski.csv',
+    tytul: 'Grafik miesięczny (wersja miejska)',
+    opis: 'Dni pracy i wolne dla każdego kierowcy. Dotyczy komunikacji miejskiej, nie turystyki.',
   },
 }
 
@@ -73,6 +85,22 @@ export default function ImportDanych() {
     setCsv(''); setNazwaPliku(''); setPodglad(null); setWynik(null); setBlad('')
   }
 
+  // Szablon jest za autoryzacją, więc zwykły link go nie pobierze — trzeba
+  // wziąć go z tokenem i podać przeglądarce jako plik.
+  async function pobierzSzablon() {
+    try {
+      const r = await api.get(`/import/szablon/${rodzaj}`, { responseType: 'blob' })
+      const url = URL.createObjectURL(r.data)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `szablon-${rodzaj}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      setBlad('Nie udało się pobrać szablonu')
+    }
+  }
+
   // PIN-y widać jeden jedyny raz — w bazie zostaje sam hash. Dlatego dajemy
   // je do skopiowania, zanim dyspozytor zamknie ekran.
   function skopiujKonta() {
@@ -97,8 +125,12 @@ export default function ImportDanych() {
         <div className="form-label" style={{ marginTop: 6, opacity: 0.75 }}>{r.opis}</div>
       </div>
 
+      <button className="btn-secondary" onClick={pobierzSzablon} style={{ marginTop: 0 }}>
+        ⬇️ Pobierz szablon {r.tytul.replace(/^\d+\.\s*/, '').toLowerCase()}
+      </button>
+
       <div>
-        <div className="form-label">Plik CSV z Excela</div>
+        <div className="form-label">Wypełniony plik CSV</div>
         <input className="form-input" type="file" accept=".csv,text/csv" onChange={wybierzPlik} />
         {nazwaPliku && (
           <div className="form-label" style={{ marginTop: 6 }}>
@@ -121,7 +153,23 @@ export default function ImportDanych() {
           <p>
             Gotowych do zapisu: <strong>{podglad.podsumowanie.do_dodania ?? podglad.podsumowanie.do_zapisu}</strong>
             {podglad.podsumowanie.bledow > 0 && <> · z błędami: <strong>{podglad.podsumowanie.bledow}</strong></>}
+            {podglad.podsumowanie.ostrzezen > 0 && <> · do sprawdzenia: <strong>{podglad.podsumowanie.ostrzezen}</strong></>}
           </p>
+
+          {/* Ostrzeżenia nie blokują zapisu — wiersz jest poprawny, ale coś w nim
+              nie pasuje (np. grupa większa niż autokar). Dyspozytor decyduje. */}
+          {podglad.ostrzezenia?.length > 0 && (
+            <>
+              <p className="import-uwaga">
+                Te wiersze zapiszą się, ale warto na nie spojrzeć:
+              </p>
+              <ul className="import-bledy">
+                {podglad.ostrzezenia.slice(0, 20).map((o, i) => (
+                  <li key={i}><strong>wiersz {o.wiersz}</strong> — {o.powod}</li>
+                ))}
+              </ul>
+            </>
+          )}
 
           {podglad.bledy?.length > 0 && (
             <>

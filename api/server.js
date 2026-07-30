@@ -11,6 +11,7 @@ const wyjazdyRoutes = require('./routes/wyjazdy');
 const adminRoutes = require('./routes/admin');
 const importRoutes = require('./routes/import');
 const firmyRoutes = require('./routes/firmy');
+const protokolyRoutes = require('./routes/protokoly');
 
 const app = express();
 
@@ -40,6 +41,7 @@ app.use('/api/wyjazdy', wyjazdyRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/import', importRoutes);
 app.use('/api/firmy', firmyRoutes);
+app.use('/api/protokoly', protokolyRoutes);
 
 // ── health check ──
 app.get('/api/ping', (req, res) => res.json({ ok: true, czas: new Date() }));

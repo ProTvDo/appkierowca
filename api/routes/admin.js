@@ -47,7 +47,9 @@ router.get('/pojazdy', authMW, wymagajAdmina, async (req, res) => {
 router.post('/wyjazdy', authMW, wymagajAdmina, async (req, res) => {
   const {
     kierowca_id, pojazd_id, data, cel_podrozy, godz_wyjazdu, godz_podstawienia,
-    godz_dojazdu, kilometry, pilot_imie_nazwisko, pilot_telefon, dodatkowe_info
+    godz_dojazdu, kilometry, pilot_imie_nazwisko, pilot_telefon, dodatkowe_info,
+    wielkosc_grupy, punkty_postojowe, nocleg, wyzywienie, oplaty_drogowe,
+    winiety_oplacone, ograniczenia_trasy
   } = req.body;
 
   if (!kierowca_id || !pojazd_id || !data || !cel_podrozy) {
@@ -75,14 +77,19 @@ router.post('/wyjazdy', authMW, wymagajAdmina, async (req, res) => {
       `INSERT INTO wyjazdy_turystyczne
         (kierowca_id, pojazd_id, data, cel_podrozy, godz_wyjazdu, godz_podstawienia,
          godz_dojazdu, kilometry, pilot_imie_nazwisko, pilot_telefon, dodatkowe_info,
-         nr_rejestracyjny, marka_model)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         nr_rejestracyjny, marka_model, wielkosc_grupy, punkty_postojowe, nocleg,
+         wyzywienie, oplaty_drogowe, winiety_oplacone, ograniczenia_trasy)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
        RETURNING *`,
       [
         kierowca_id, pojazd_id, data, cel_podrozy,
         godz_wyjazdu || null, godz_podstawienia || null, godz_dojazdu || null,
         kilometry || null, pilot_imie_nazwisko || null, pilot_telefon || null,
         dodatkowe_info || null, pojazd.nr_rejestracyjny, `${pojazd.marka} ${pojazd.model}`,
+        wielkosc_grupy || null, punkty_postojowe || null, nocleg || null,
+        wyzywienie || null, oplaty_drogowe || null,
+        winiety_oplacone === undefined ? null : winiety_oplacone,
+        ograniczenia_trasy || null,
       ]
     );
     res.status(201).json(rows[0]);

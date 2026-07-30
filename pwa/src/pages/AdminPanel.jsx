@@ -10,11 +10,14 @@ export default function AdminPanel({ kierowca, onLogout }) {
   const [sending, setSending]   = useState(false)
   const [toast, setToast]       = useState('')
 
-  const [form, setForm] = useState({
+  const PUSTY_FORM = {
     kierowca_id: '', pojazd_id: '', data: '', cel_podrozy: '',
     godz_podstawienia: '', godz_wyjazdu: '', godz_dojazdu: '',
     kilometry: '', pilot_imie_nazwisko: '', pilot_telefon: '', dodatkowe_info: '',
-  })
+    wielkosc_grupy: '', punkty_postojowe: '', nocleg: '', wyzywienie: '',
+    oplaty_drogowe: '', winiety_oplacone: '', ograniczenia_trasy: '',
+  }
+  const [form, setForm] = useState(PUSTY_FORM)
 
   useEffect(() => {
     api.get('/admin/kierowcy').then(r => setKierowcy(r.data || [])).catch(() => setKierowcy([]))
@@ -41,14 +44,15 @@ export default function AdminPanel({ kierowca, onLogout }) {
     try {
       await api.post('/admin/wyjazdy', {
         ...form,
-        kilometry: form.kilometry ? parseInt(form.kilometry) : null,
+        kilometry:      form.kilometry ? parseInt(form.kilometry) : null,
+        wielkosc_grupy: form.wielkosc_grupy ? parseInt(form.wielkosc_grupy) : null,
+        // '' oznacza "nie ustalono" i musi dojść jako null, nie jako false —
+        // inaczej kierowca zobaczy "winiety nieopłacone" tam, gdzie dyspozytor
+        // po prostu jeszcze nie wie.
+        winiety_oplacone: form.winiety_oplacone === '' ? null : form.winiety_oplacone === 'tak',
       })
       showToast('✅ Wyjazd przypisany!')
-      setForm({
-        kierowca_id: '', pojazd_id: '', data: '', cel_podrozy: '',
-        godz_podstawienia: '', godz_wyjazdu: '', godz_dojazdu: '',
-        kilometry: '', pilot_imie_nazwisko: '', pilot_telefon: '', dodatkowe_info: '',
-      })
+      setForm(PUSTY_FORM)
     } catch (e) {
       showToast('❌ Błąd — spróbuj ponownie', '#ef4444')
     } finally {
@@ -138,6 +142,50 @@ export default function AdminPanel({ kierowca, onLogout }) {
         <div>
           <div className="form-label">Pilot grupy — telefon</div>
           <input className="form-input" value={form.pilot_telefon} onChange={e => ustaw('pilot_telefon', e.target.value)} />
+        </div>
+
+        <div>
+          <div className="form-label">Wielkość grupy (osób)</div>
+          <input className="form-input" type="number" placeholder="np. 45" value={form.wielkosc_grupy} onChange={e => ustaw('wielkosc_grupy', e.target.value)} />
+        </div>
+
+        <div>
+          <div className="form-label">Planowane punkty postojowe</div>
+          <textarea className="form-textarea" placeholder="np. Gniew — postój 20 min, Malbork — parking przy zamku"
+                    value={form.punkty_postojowe} onChange={e => ustaw('punkty_postojowe', e.target.value)} />
+        </div>
+
+        <div>
+          <div className="form-label">Nocleg kierowcy</div>
+          <input className="form-input" placeholder="np. Hotel Zamkowy, opłacony przez biuro"
+                 value={form.nocleg} onChange={e => ustaw('nocleg', e.target.value)} />
+        </div>
+
+        <div>
+          <div className="form-label">Wyżywienie kierowcy</div>
+          <input className="form-input" placeholder="np. obiad z grupą, śniadanie w hotelu"
+                 value={form.wyzywienie} onChange={e => ustaw('wyzywienie', e.target.value)} />
+        </div>
+
+        <div>
+          <div className="form-label">Opłaty drogowe — kto płaci</div>
+          <input className="form-input" placeholder="np. karta flotowa w pojeździe"
+                 value={form.oplaty_drogowe} onChange={e => ustaw('oplaty_drogowe', e.target.value)} />
+        </div>
+
+        <div>
+          <div className="form-label">Winiety opłacone przez biuro</div>
+          <select className="form-select" value={form.winiety_oplacone} onChange={e => ustaw('winiety_oplacone', e.target.value)}>
+            <option value="">— nie ustalono —</option>
+            <option value="tak">Tak</option>
+            <option value="nie">Nie — kierowca opłaca</option>
+          </select>
+        </div>
+
+        <div>
+          <div className="form-label">Ograniczenia na trasie</div>
+          <textarea className="form-textarea" placeholder="np. most w Tczewie do 12 t, wjazd do centrum tylko do 3,5 m wysokości"
+                    value={form.ograniczenia_trasy} onChange={e => ustaw('ograniczenia_trasy', e.target.value)} />
         </div>
 
         <div>
