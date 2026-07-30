@@ -2,8 +2,15 @@ const express = require('express');
 const bcrypt  = require('bcryptjs');
 const jwt     = require('jsonwebtoken');
 const db      = require('../db');
+const { sprawdzLimit, przytrzymaj, zapiszNieudana, wyczysc } = require('../lib/limit');
 
 const router = express.Router();
+
+// Skrót nieistniejącego PIN-u, na którym i tak wykonujemy bcrypt, gdy konta nie
+// ma. Bez tego odpowiedź przychodziła 9 razy szybciej niż przy istniejącym
+// koncie (pomiar: 68 vs 7,3 próby na sekundę), co pozwalało wyliczyć, które
+// numery służbowe istnieją, bez znajomości żadnego PIN-u.
+const ATRAPA_HASH = '$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy';
 
 // ── GET /api/auth/firma/:kod ──────────────────────────────
 // Ekran logowania pyta o firmę rozpoznaną z subdomeny, żeby pokazać jej nazwę
@@ -28,7 +35,7 @@ router.get('/firma/:kod', async (req, res) => {
       trial_wygasl: firma.trial_wygasl,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -46,6 +53,19 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: 'Nie wiadomo, z której firmy jest to konto' });
   }
 
+  // Limit liczymy na parę (adres klienta, firma + numer), żeby zgadywanie PIN-u
+  // jednego konta nie blokowało pozostałym kierowcom logowania.
+  const cel = `${String(kod_firmy).toLowerCase()}/${nr_sluzbowy}`;
+  const limit = sprawdzLimit(req, cel);
+  if (!limit.wolno) {
+    const minuty = Math.ceil(limit.sekundy / 60);
+    return res.status(429).json({
+      error: `Za dużo nieudanych prób. Spróbuj ponownie za ${minuty} min.`,
+      ponow_po_sekundach: limit.sekundy,
+    });
+  }
+  await przytrzymaj(req, cel);
+
   let firma, kierowca;
   try {
     const { rows: firmaRows } = await db.query(
@@ -58,7 +78,10 @@ router.post('/login', async (req, res) => {
 
     if (!firma || !firma.aktywna) {
       // Ten sam komunikat co przy złym PIN-ie — nie podpowiadamy z zewnątrz,
-      // które kody firm istnieją.
+      // które kody firm istnieją. Bcrypt na atrapie, żeby czas odpowiedzi
+      // nie różnił nieistniejącej firmy od złego PIN-u.
+      await bcrypt.compare(String(pin), ATRAPA_HASH);
+      zapiszNieudana(req, cel);
       return res.status(401).json({ error: 'Nieprawidłowy numer służbowy lub PIN' });
     }
     if (firma.trial_wygasl) {
@@ -77,10 +100,15 @@ router.post('/login', async (req, res) => {
     );
     kierowca = rows[0];
   } catch (e) {
-    return res.status(500).json({ error: e.message });
+    console.error('Błąd logowania:', e.message);
+    return res.status(500).json({ error: 'Błąd serwera' });
   }
 
   if (!kierowca) {
+    // Ta sama praca co przy istniejącym koncie — inaczej szybsza odpowiedź
+    // ujawniałaby, których numerów służbowych nie ma.
+    await bcrypt.compare(String(pin), ATRAPA_HASH);
+    zapiszNieudana(req, cel);
     return res.status(401).json({ error: 'Nieprawidłowy numer służbowy lub PIN' });
   }
 
@@ -90,8 +118,13 @@ router.post('/login', async (req, res) => {
 
   const pinOk = await bcrypt.compare(pin, kierowca.pin_hash);
   if (!pinOk) {
+    zapiszNieudana(req, cel);
     return res.status(401).json({ error: 'Nieprawidłowy numer służbowy lub PIN' });
   }
+
+  // Udane logowanie zeruje licznik, żeby kierowca, który raz się pomylił,
+  // nie chodził z narastającym opóźnieniem do końca dnia.
+  wyczysc(req, cel);
 
   const token = jwt.sign(
     {
@@ -133,19 +166,45 @@ router.post('/zmien-pin', require('../middleware/auth'), async (req, res) => {
   if (!stary_pin || !nowy_pin || nowy_pin.length !== 4 || !/^\d{4}$/.test(nowy_pin)) {
     return res.status(400).json({ error: 'PIN musi mieć dokładnie 4 cyfry' });
   }
-
-  const { rows } = await db.query('SELECT pin_hash FROM kierowcy WHERE id = $1', [kierowcaId]);
-  const kierowca = rows[0];
-
-  const staryOk = await bcrypt.compare(stary_pin, kierowca.pin_hash);
-  if (!staryOk) {
-    return res.status(401).json({ error: 'Stary PIN jest nieprawidłowy' });
+  if (nowy_pin === stary_pin) {
+    return res.status(400).json({ error: 'Nowy PIN musi się różnić od obecnego' });
+  }
+  // Cztery takie same cyfry i proste ciągi to pierwsze, co zgaduje ktoś obcy.
+  if (/^(\d)\1{3}$/.test(nowy_pin) || ['1234', '4321', '0123', '9876'].includes(nowy_pin)) {
+    return res.status(400).json({ error: 'Ten PIN jest zbyt łatwy do odgadnięcia — wybierz inny' });
   }
 
-  const nowyHash = await bcrypt.hash(nowy_pin, 10);
-  await db.query('UPDATE kierowcy SET pin_hash = $1 WHERE id = $2', [nowyHash, kierowcaId]);
+  // Ten endpoint też pozwala zgadywać PIN, tylko z ważnym tokenem, więc
+  // podlega temu samemu ograniczeniu co logowanie.
+  const cel = `zmiana-pin/${kierowcaId}`;
+  const limit = sprawdzLimit(req, cel);
+  if (!limit.wolno) {
+    return res.status(429).json({
+      error: `Za dużo nieudanych prób. Spróbuj ponownie za ${Math.ceil(limit.sekundy / 60)} min.`,
+    });
+  }
+  await przytrzymaj(req, cel);
 
-  res.json({ ok: true, message: 'PIN zmieniony pomyślnie' });
+  try {
+    const { rows } = await db.query('SELECT pin_hash FROM kierowcy WHERE id = $1', [kierowcaId]);
+    const kierowca = rows[0];
+    if (!kierowca) return res.status(401).json({ error: 'Zaloguj się ponownie' });
+
+    const staryOk = await bcrypt.compare(stary_pin, kierowca.pin_hash);
+    if (!staryOk) {
+      zapiszNieudana(req, cel);
+      return res.status(401).json({ error: 'Obecny PIN jest nieprawidłowy' });
+    }
+
+    const nowyHash = await bcrypt.hash(nowy_pin, 10);
+    await db.query('UPDATE kierowcy SET pin_hash = $1 WHERE id = $2', [nowyHash, kierowcaId]);
+    wyczysc(req, cel);
+
+    res.json({ ok: true, message: 'PIN zmieniony pomyślnie' });
+  } catch (e) {
+    console.error('Błąd zmiany PIN-u:', e.message);
+    res.status(500).json({ error: 'Błąd serwera' });
+  }
 });
 
 module.exports = router;

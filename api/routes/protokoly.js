@@ -9,6 +9,7 @@ const db         = require('../db');
 const authMW     = require('../middleware/auth');
 const { adresatFirmy } = require('../lib/adresaci');
 const { transporter, nadawca } = require('../lib/poczta');
+const { esc, escWiersze } = require('../lib/html');
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ router.get('/wyjazd/:wyjazdId', authMW, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -121,17 +122,17 @@ router.post('/', authMW, async (req, res) => {
         await transporter.sendMail({
           from: nadawca(),
           to:   emailTo,
-          subject: `⚠️ Protokół ${rodzaj === 'odbior' ? 'odbioru' : 'zdania'} z uwagami — ${wyjazd.nr_rejestracyjny || 'pojazd'} (${wyjazd.cel_podrozy})`,
+          subject: `⚠️ Protokół ${rodzaj === 'odbior' ? 'odbioru' : 'zdania'} z uwagami — ${esc(wyjazd.nr_rejestracyjny || 'pojazd')} (${esc(wyjazd.cel_podrozy)})`,
           html: `
             <h2>Protokół ${rodzaj === 'odbior' ? 'odbioru pojazdu' : 'zdania pojazdu'} z uwagami</h2>
-            <p><strong>Kierowca:</strong> ${req.kierowca.imie} ${req.kierowca.nazwisko}<br/>
-               <strong>Wyjazd:</strong> ${wyjazd.cel_podrozy} (${wyjazd.data})<br/>
-               <strong>Pojazd:</strong> ${wyjazd.nr_rejestracyjny || '—'} ${wyjazd.marka_model || ''}</p>
+            <p><strong>Kierowca:</strong> ${esc(req.kierowca.imie)} ${esc(req.kierowca.nazwisko)}<br/>
+               <strong>Wyjazd:</strong> ${esc(wyjazd.cel_podrozy)} (${esc(wyjazd.data)})<br/>
+               <strong>Pojazd:</strong> ${esc(wyjazd.nr_rejestracyjny || '—')} ${esc(wyjazd.marka_model || '')}</p>
             <h3>Punkty wymagające uwagi</h3>
-            <ul>${braki.map(b => `<li>${b}</li>`).join('') || '<li>—</li>'}</ul>
-            ${uszkodzenia ? `<h3>Uszkodzenia</h3><p>${uszkodzenia}</p>` : ''}
-            ${protokol.uwagi ? `<h3>Uwagi kierowcy</h3><p>${protokol.uwagi}</p>` : ''}
-            <p style="color:#666">Stan paliwa: ${protokol.stan_paliwa || '—'} · Licznik: ${protokol.licznik_km ?? '—'} km</p>
+            <ul>${braki.map(b => `<li>${esc(b)}</li>`).join('') || '<li>—</li>'}</ul>
+            ${uszkodzenia ? `<h3>Uszkodzenia</h3><p>${escWiersze(uszkodzenia)}</p>` : ''}
+            ${protokol.uwagi ? `<h3>Uwagi kierowcy</h3><p>${escWiersze(protokol.uwagi)}</p>` : ''}
+            <p style="color:#666">Stan paliwa: ${esc(protokol.stan_paliwa || '—')} · Licznik: ${esc(protokol.licznik_km ?? '—')} km</p>
           `,
         });
         emailWyslany = true;
@@ -142,7 +143,7 @@ router.post('/', authMW, async (req, res) => {
 
     res.status(201).json({ protokol, email_wyslany: emailWyslany });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 

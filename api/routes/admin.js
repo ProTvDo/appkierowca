@@ -24,7 +24,7 @@ router.get('/kierowcy', authMW, wymagajAdmina, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -42,7 +42,7 @@ router.get('/kierowcy/lista', authMW, wymagajAdmina, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -65,7 +65,7 @@ router.post('/kierowcy/:id/reset-pin', authMW, wymagajAdmina, async (req, res) =
 
     res.json({ ...rows[0], pin });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -79,7 +79,7 @@ router.get('/pojazdy', authMW, wymagajAdmina, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -136,7 +136,7 @@ router.post('/wyjazdy', authMW, wymagajAdmina, async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 

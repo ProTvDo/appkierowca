@@ -28,6 +28,10 @@ export default function ZmianaPin({ goTo }) {
     if (nowy === stary) {
       pokazToast('⚠️ Nowy PIN jest taki sam jak obecny', '#f97316'); return
     }
+    // Ta sama reguła co na serwerze — lepiej powiedzieć od razu niż po wysłaniu.
+    if (/^(\d)\1{3}$/.test(nowy) || ['1234', '4321', '0123', '9876'].includes(nowy)) {
+      pokazToast('⚠️ Ten PIN jest zbyt łatwy do odgadnięcia', '#f97316'); return
+    }
 
     setZajety(true)
     try {

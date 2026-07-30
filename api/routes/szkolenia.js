@@ -41,7 +41,7 @@ router.get('/', authMW, async (req, res) => {
 
     res.json(wynik);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -91,7 +91,7 @@ router.get('/:id', authMW, async (req, res) => {
 
     res.json({ ...material, test });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -101,6 +101,15 @@ router.post('/:id/ukoncz', authMW, async (req, res) => {
   const kierowcaId = req.kierowca.id;
 
   try {
+    // Materiał musi być widoczny dla firmy kierowcy — inaczej dałoby się
+    // zapisać ukończenie materiału własnego innej firmy.
+    const { rows: mat } = await db.query(
+      `SELECT id FROM materialy_szkoleniowe
+        WHERE id = $1 AND aktywny = true AND (firma_id IS NULL OR firma_id = $2)`,
+      [id, req.kierowca.firma_id]
+    );
+    if (!mat[0]) return res.status(404).json({ error: 'Materiał nie znaleziony' });
+
     await db.query(
       `INSERT INTO postepy_szkolen (kierowca_id, material_id)
        VALUES ($1, $2)
@@ -109,7 +118,8 @@ router.post('/:id/ukoncz', authMW, async (req, res) => {
     );
     res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd zapisu ukończenia materiału:', e.message);
+    res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -125,6 +135,15 @@ router.post('/testy/:testId/wyslij', authMW, async (req, res) => {
   }
 
   try {
+    // Test musi należeć do firmy kierowcy albo być wspólny — bez tego można było
+    // rozwiązywać i zapisywać wynik testu należącego do innej firmy.
+    const { rows: testRows } = await db.query(
+      `SELECT id FROM testy
+        WHERE id = $1 AND aktywny = true AND (firma_id IS NULL OR firma_id = $2)`,
+      [testId, req.kierowca.firma_id]
+    );
+    if (!testRows[0]) return res.status(404).json({ error: 'Test nie znaleziony' });
+
     const { rows: pytaniaRows } = await db.query(
       `SELECT id FROM pytania_testowe WHERE test_id = $1`,
       [testId]
@@ -160,7 +179,7 @@ router.post('/testy/:testId/wyslij', authMW, async (req, res) => {
 
     res.json({ wynik_procent: wynikProcent, zdany, poprawne, wszystkie: pytania.length });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -219,7 +238,7 @@ router.get('/postepy/wszystkie', authMW, async (req, res) => {
       uprawnienia: uprawnieniaZeStatusem,
     });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 

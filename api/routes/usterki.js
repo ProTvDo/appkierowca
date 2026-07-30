@@ -3,6 +3,7 @@ const db         = require('../db');
 const authMW     = require('../middleware/auth');
 const { adresatFirmy } = require('../lib/adresaci');
 const { transporter, nadawca } = require('../lib/poczta');
+const { esc, escWiersze } = require('../lib/html');
 
 const router = express.Router();
 
@@ -33,7 +34,7 @@ router.get('/', authMW, async (req, res) => {
 
     res.json(wynik);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -94,7 +95,7 @@ router.post('/', authMW, async (req, res) => {
       kierowcy: { imie: r.imie, nazwisko: r.nazwisko, nr_sluzbowy: r.nr_sluzbowy },
     };
   } catch (e) {
-    return res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); return res.status(500).json({ error: 'Błąd serwera' });
   }
 
   // Zgłoszenie idzie do serwisu tej firmy, a nie na wspólny adres aplikacji.
@@ -108,20 +109,20 @@ router.post('/', authMW, async (req, res) => {
       await transporter.sendMail({
         from:    nadawca(),
         to:      emailTo,
-        subject: `🔧 Nowa usterka — pojazd ${p.nr_boczny} — ${kat.nazwa}`,
+        subject: `🔧 Nowa usterka — pojazd ${esc(p.nr_boczny)} — ${esc(kat.nazwa)}`,
         html: `
           <h2>Nowe zgłoszenie usterki</h2>
           <table style="border-collapse:collapse;font-family:Arial,sans-serif;">
             <tr><td style="padding:6px 12px;color:#666">Kierowca:</td>
-                <td style="padding:6px 12px;font-weight:bold">${k.imie} ${k.nazwisko} (nr ${k.nr_sluzbowy})</td></tr>
+                <td style="padding:6px 12px;font-weight:bold">${esc(k.imie)} ${esc(k.nazwisko)} (nr ${esc(k.nr_sluzbowy)})</td></tr>
             <tr><td style="padding:6px 12px;color:#666">Pojazd:</td>
-                <td style="padding:6px 12px;font-weight:bold">${p.nr_boczny} · ${p.marka} ${p.model}</td></tr>
+                <td style="padding:6px 12px;font-weight:bold">${esc(p.nr_boczny)} · ${esc(p.marka)} ${esc(p.model)}</td></tr>
             <tr><td style="padding:6px 12px;color:#666">Kategoria:</td>
-                <td style="padding:6px 12px">${kat.ikona} ${kat.nazwa}</td></tr>
+                <td style="padding:6px 12px">${esc(kat.ikona)} ${esc(kat.nazwa)}</td></tr>
             <tr><td style="padding:6px 12px;color:#666">Opis:</td>
-                <td style="padding:6px 12px">${opis || '—'}</td></tr>
+                <td style="padding:6px 12px">${escWiersze(opis) || '—'}</td></tr>
             <tr><td style="padding:6px 12px;color:#666">Lokalizacja:</td>
-                <td style="padding:6px 12px">${lokalizacja || '—'}</td></tr>
+                <td style="padding:6px 12px">${escWiersze(lokalizacja) || '—'}</td></tr>
             <tr><td style="padding:6px 12px;color:#666">Data:</td>
                 <td style="padding:6px 12px">${new Date().toLocaleString('pl-PL')}</td></tr>
           </table>
@@ -147,7 +148,7 @@ router.get('/kategorie', authMW, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 

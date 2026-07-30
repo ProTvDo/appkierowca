@@ -3,6 +3,7 @@ const db         = require('../db');
 const authMW     = require('../middleware/auth');
 const { adresatFirmy } = require('../lib/adresaci');
 const { transporter, nadawca } = require('../lib/poczta');
+const { esc } = require('../lib/html');
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ router.get('/', authMW, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -42,7 +43,7 @@ router.get('/najblizszy', authMW, async (req, res) => {
     );
     res.json(rows[0] || null);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -63,7 +64,7 @@ router.post('/:id/zaliczka', authMW, async (req, res) => {
     if (rows.length === 0) return res.status(404).json({ error: 'Wyjazd nie znaleziony' });
     res.json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -92,7 +93,7 @@ router.post('/:id/tankowanie', authMW, async (req, res) => {
     );
     res.status(201).json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -101,13 +102,21 @@ router.get('/:id/tankowania', authMW, async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Bez złączenia z wyjazdem i warunku na kierowcę każdy zalogowany mógł
+    // odczytać tankowania dowolnego wyjazdu w całej aplikacji, zgadując numer —
+    // czyli koszty paliwa innych przewoźników.
     const { rows } = await db.query(
-      `SELECT id, litry, koszt, created_at FROM tankowania WHERE wyjazd_id = $1 ORDER BY created_at`,
-      [id]
+      `SELECT t.id, t.litry, t.koszt, t.created_at
+         FROM tankowania t
+         JOIN wyjazdy_turystyczne w ON w.id = t.wyjazd_id
+        WHERE t.wyjazd_id = $1 AND w.kierowca_id = $2
+        ORDER BY t.created_at`,
+      [id, req.kierowca.id]
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd odczytu tankowań:', e.message);
+    res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -140,7 +149,7 @@ router.post('/:id/zakoncz', authMW, async (req, res) => {
     );
     tankowania = tankRows;
   } catch (e) {
-    return res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); return res.status(500).json({ error: 'Błąd serwera' });
   }
 
   const sumaLitrow = tankowania.reduce((s, t) => s + Number(t.litry), 0);
@@ -165,20 +174,20 @@ router.post('/:id/zakoncz', authMW, async (req, res) => {
       await transporter.sendMail({
         from:    nadawca(),
         to:      emailTo,
-        subject: `🧳 Podsumowanie wyjazdu — ${wyjazd.cel_podrozy} (${wyjazd.kierowcy?.imie} ${wyjazd.kierowcy?.nazwisko})`,
+        subject: `🧳 Podsumowanie wyjazdu — ${esc(wyjazd.cel_podrozy)} (${esc(wyjazd.kierowcy?.imie)} ${esc(wyjazd.kierowcy?.nazwisko)})`,
         html: `
           <h2>Wyjazd zakończony</h2>
           <table style="border-collapse:collapse;font-family:Arial,sans-serif;">
             <tr><td style="padding:6px 12px;color:#666">Kierowca:</td>
-                <td style="padding:6px 12px;font-weight:bold">${wyjazd.kierowcy?.imie} ${wyjazd.kierowcy?.nazwisko}</td></tr>
+                <td style="padding:6px 12px;font-weight:bold">${esc(wyjazd.kierowcy?.imie)} ${esc(wyjazd.kierowcy?.nazwisko)}</td></tr>
             <tr><td style="padding:6px 12px;color:#666">Cel podróży:</td>
-                <td style="padding:6px 12px;font-weight:bold">${wyjazd.cel_podrozy}</td></tr>
+                <td style="padding:6px 12px;font-weight:bold">${esc(wyjazd.cel_podrozy)}</td></tr>
             <tr><td style="padding:6px 12px;color:#666">Data:</td>
-                <td style="padding:6px 12px">${wyjazd.data}</td></tr>
+                <td style="padding:6px 12px">${esc(wyjazd.data)}</td></tr>
             <tr><td style="padding:6px 12px;color:#666">Pojazd:</td>
-                <td style="padding:6px 12px">${wyjazd.nr_rejestracyjny || '—'} · ${wyjazd.marka_model || '—'}</td></tr>
+                <td style="padding:6px 12px">${esc(wyjazd.nr_rejestracyjny || '—')} · ${esc(wyjazd.marka_model || '—')}</td></tr>
             <tr><td style="padding:6px 12px;color:#666">Zaliczka pobrana:</td>
-                <td style="padding:6px 12px">${wyjazd.zaliczka != null ? wyjazd.zaliczka + ' zł' : '—'}</td></tr>
+                <td style="padding:6px 12px">${wyjazd.zaliczka != null ? esc(wyjazd.zaliczka) + ' zł' : '—'}</td></tr>
           </table>
           <h3 style="margin-top:16px">Tankowania (razem ${sumaLitrow.toFixed(2)} l, ${sumaKosztow.toFixed(2)} zł)</h3>
           <table style="border-collapse:collapse;font-family:Arial,sans-serif;">

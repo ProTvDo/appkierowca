@@ -35,7 +35,7 @@ router.get('/', authMW, async (req, res) => {
     );
     res.json(rows.map(mapWiersz));
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 

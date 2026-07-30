@@ -48,7 +48,7 @@ router.get('/', authMW, wymagajSuperadmina, async (req, res) => {
     );
     res.json(rows);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -107,7 +107,7 @@ router.post('/', authMW, wymagajSuperadmina, async (req, res) => {
     if (e.code === '23505') {
       return res.status(400).json({ error: 'Firma o takiej nazwie lub kodzie już istnieje' });
     }
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -158,7 +158,7 @@ router.patch('/:id', authMW, wymagajSuperadmina, async (req, res) => {
     );
     res.json(rows[0]);
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
@@ -177,7 +177,7 @@ router.post('/:id/reset-pin', authMW, wymagajSuperadmina, async (req, res) => {
     if (rowCount === 0) return res.status(404).json({ error: 'Nie ma takiego kierowcy w tej firmie' });
     res.json({ nr_sluzbowy, pin });
   } catch (e) {
-    res.status(500).json({ error: e.message });
+    console.error('Błąd:', e.message); res.status(500).json({ error: 'Błąd serwera' });
   }
 });
 
