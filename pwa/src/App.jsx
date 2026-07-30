@@ -102,7 +102,7 @@ export default function App() {
         {strona === 'szkolenie-detal' && <SzkolenieDetal materialId={wybranyMaterialId} goTo={setStrona} setWybranyTestId={setWybranyTestId} />}
         {strona === 'test' && <Test testId={wybranyTestId} goTo={setStrona} />}
       </div>
-      <BottomNav aktywna={strona} goTo={setStrona} />
+      <BottomNav aktywna={strona} goTo={setStrona} wersja={kierowca.wersja} />
     </div>
   )
 }
